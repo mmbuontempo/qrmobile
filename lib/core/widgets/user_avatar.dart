@@ -44,9 +44,9 @@ class UserAvatar extends StatelessWidget {
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: imageUrl == null ? backgroundColor.withOpacity(0.1) : null,
+        color: imageUrl == null ? backgroundColor.withValues(alpha: 0.1) : null,
         border: Border.all(
-          color: imageUrl == null ? backgroundColor.withOpacity(0.2) : AppTheme.divider,
+          color: imageUrl == null ? backgroundColor.withValues(alpha: 0.2) : Theme.of(context).dividerColor,
           width: 2,
         ),
       ),
@@ -55,7 +55,7 @@ class UserAvatar extends StatelessWidget {
             ? Image.network(
                 imageUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildInitials(context, initials, backgroundColor),
+                errorBuilder: (context, error, stackTrace) => _buildInitials(context, initials, backgroundColor),
               )
             : _buildInitials(context, initials, backgroundColor),
       ),

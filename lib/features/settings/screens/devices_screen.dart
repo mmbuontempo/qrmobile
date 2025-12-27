@@ -36,10 +36,8 @@ class _DevicesScreenState extends State<DevicesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Dispositivos Activos'),
-        backgroundColor: AppTheme.background,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -58,7 +56,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(20),
                   itemCount: _devices.length,
-                  separatorBuilder: (_, __) => const Gap(12),
+                  separatorBuilder: (context, index) => const Gap(12),
                   itemBuilder: (context, index) {
                     final device = _devices[index];
                     return _DeviceCard(
@@ -74,7 +72,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                 child: FilledButton.icon(
                   onPressed: _confirmLogoutAll,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.error.withOpacity(0.1),
+                    backgroundColor: AppTheme.error.withValues(alpha: 0.1),
                     foregroundColor: AppTheme.error,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -92,12 +90,12 @@ class _DevicesScreenState extends State<DevicesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.devices_rounded, size: 64, color: AppTheme.textSecondary),
+          Icon(Icons.devices_rounded, size: 64, color: Theme.of(context).disabledColor),
           const Gap(16),
           Text(
             'No se encontraron dispositivos',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppTheme.textSecondary,
+              color: Theme.of(context).disabledColor,
             ),
           ),
         ],
@@ -183,10 +181,10 @@ class _DeviceCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCurrent ? AppTheme.primary.withOpacity(0.5) : AppTheme.divider,
+          color: isCurrent ? Theme.of(context).primaryColor.withValues(alpha: 0.5) : Theme.of(context).dividerColor,
           width: isCurrent ? 2 : 1,
         ),
       ),
@@ -195,10 +193,10 @@ class _DeviceCard extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isCurrent ? AppTheme.primary.withOpacity(0.1) : AppTheme.background,
+            color: isCurrent ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Theme.of(context).scaffoldBackgroundColor,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: isCurrent ? AppTheme.primary : AppTheme.textSecondary),
+          child: Icon(icon, color: isCurrent ? Theme.of(context).primaryColor : Theme.of(context).iconTheme.color),
         ),
         title: Row(
           children: [
@@ -213,7 +211,7 @@ class _DeviceCard extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
+                  color: Theme.of(context).primaryColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text(
@@ -233,13 +231,13 @@ class _DeviceCard extends StatelessWidget {
               lastActive != null 
                   ? 'Activo: ${TimeAgo.format(lastActive)}' 
                   : 'Activo recientemente',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary.withOpacity(0.7)),
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary.withValues(alpha: 0.7)),
             ),
           ],
         ),
         trailing: !isCurrent
             ? IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error),
+                icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
                 onPressed: onRevoke,
                 tooltip: 'Revocar acceso',
               )

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../providers/stats_provider.dart';
@@ -68,7 +67,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(), // Disable swipe to avoid conflict with gestures
@@ -80,10 +78,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -94,22 +92,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 70,
           selectedIndex: _currentIndex,
           onDestinationSelected: _onNavTap,
-          backgroundColor: AppTheme.surface,
-          indicatorColor: AppTheme.primary.withOpacity(0.1),
+          backgroundColor: Theme.of(context).cardColor,
+          indicatorColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           destinations: [
             NavigationDestination(
               icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(Icons.home_rounded, color: AppTheme.primary),
+              selectedIcon: Icon(Icons.home_rounded, color: Theme.of(context).colorScheme.primary),
               label: 'Inicio',
             ),
             NavigationDestination(
               icon: const Icon(Icons.qr_code_outlined),
-              selectedIcon: const Icon(Icons.qr_code_rounded, color: AppTheme.primary),
+              selectedIcon: Icon(Icons.qr_code_rounded, color: Theme.of(context).colorScheme.primary),
               label: 'Mis QRs',
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline),
-              selectedIcon: const Icon(Icons.person_rounded, color: AppTheme.primary),
+              selectedIcon: Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary),
               label: 'Perfil',
             ),
           ],
@@ -146,15 +144,13 @@ class _HomeTab extends StatelessWidget {
           billingProvider.loadSubscription(),
         ]);
       },
-      color: AppTheme.primary,
-      backgroundColor: AppTheme.surface,
+      color: Theme.of(context).primaryColor,
+      backgroundColor: Theme.of(context).cardColor,
       child: CustomScrollView(
         slivers: [
           SliverAppBar.large(
             title: const Text('PromusLink'),
             centerTitle: false,
-            backgroundColor: AppTheme.background,
-            surfaceTintColor: AppTheme.background,
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
@@ -162,7 +158,7 @@ class _HomeTab extends StatelessWidget {
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2), width: 2),
                   ),
                   child: UserAvatar(
                     name: authProvider.user?.name,
@@ -185,15 +181,12 @@ class _HomeTab extends StatelessWidget {
                       '${_getGreeting()}, ${authProvider.user?.name?.split(' ').first ?? 'Usuario'}! 👋',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
                       ),
                     ),
                     const Gap(4),
                     Text(
                       'Aquí está el resumen de tu actividad',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.1, end: 0),
@@ -206,14 +199,17 @@ class _HomeTab extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+                        colors: [
+                          Theme.of(context).primaryColor, 
+                          Theme.of(context).primaryColor.withValues(alpha: 0.8)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.3),
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -236,7 +232,7 @@ class _HomeTab extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -257,7 +253,7 @@ class _HomeTab extends StatelessWidget {
                             value: billingProvider.subscription!.qrLimit > 0 
                                 ? billingProvider.subscription!.qrUsed / billingProvider.subscription!.qrLimit
                                 : 0,
-                            backgroundColor: Colors.white.withOpacity(0.2),
+                            backgroundColor: Colors.white.withValues(alpha: 0.2),
                             valueColor: const AlwaysStoppedAnimation(Colors.white),
                             minHeight: 6,
                           ),
@@ -268,7 +264,7 @@ class _HomeTab extends StatelessWidget {
                               ? 'Puedes crear ${billingProvider.qrRemaining} QRs más'
                               : 'Has alcanzado el límite de tu plan',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 12,
                           ),
                         ),
@@ -306,28 +302,28 @@ class _HomeTab extends StatelessWidget {
                         title: 'Total QRs',
                         value: qrProvider.qrCount.toString(),
                         icon: Icons.qr_code_2,
-                        color: AppTheme.primary,
+                        color: Theme.of(context).primaryColor,
                         delay: 100,
                       ),
                       StatsCard(
                         title: 'QRs Activos',
                         value: qrProvider.activeCount.toString(),
                         icon: Icons.check_circle_rounded,
-                        color: AppTheme.success,
+                        color: Theme.of(context).colorScheme.secondary,
                         delay: 200,
                       ),
                       StatsCard(
                         title: 'Escaneos Hoy',
                         value: statsProvider.stats.scansToday.toString(),
                         icon: Icons.today_rounded,
-                        color: AppTheme.warning,
+                        color: Theme.of(context).colorScheme.error,
                         delay: 300,
                       ),
                       StatsCard(
                         title: 'Total Escaneos',
                         value: statsProvider.stats.totalScans.toString(),
                         icon: Icons.insights_rounded,
-                        color: AppTheme.secondary,
+                        color: Theme.of(context).colorScheme.tertiary,
                         delay: 400,
                       ),
                     ],
@@ -340,7 +336,6 @@ class _HomeTab extends StatelessWidget {
                   'Acciones Rápidas',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
                   ),
                 ).animate().fadeIn(delay: 500.ms),
                 
@@ -352,7 +347,7 @@ class _HomeTab extends StatelessWidget {
                       child: _QuickActionCard(
                         icon: Icons.add_circle_outline_rounded,
                         label: 'Crear QR',
-                        color: AppTheme.primary,
+                        color: Theme.of(context).primaryColor,
                         delay: 600,
                         onTap: () {
                           if (billingProvider.canCreateQr) {
@@ -367,7 +362,7 @@ class _HomeTab extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Límite de plan alcanzado. Actualiza tu plan para crear más QRs.'),
-                                backgroundColor: AppTheme.warning,
+                                backgroundColor: Theme.of(context).colorScheme.error,
                                 action: SnackBarAction(
                                   label: 'VER PLANES',
                                   textColor: Colors.white,
@@ -389,7 +384,7 @@ class _HomeTab extends StatelessWidget {
                       child: _QuickActionCard(
                         icon: Icons.share_rounded,
                         label: 'Compartir',
-                        color: Colors.teal,
+                        color: Theme.of(context).colorScheme.secondary,
                         delay: 700,
                         onTap: () {},
                       ),
@@ -408,13 +403,12 @@ class _HomeTab extends StatelessWidget {
                         'QRs Recientes',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
                         ),
                       ),
                       TextButton(
                         onPressed: () => onSwitchTab(1), // Switch to QRs tab
                         style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.primary,
+                          foregroundColor: Theme.of(context).primaryColor,
                         ),
                         child: const Text('Ver todos'),
                       ),
@@ -427,12 +421,12 @@ class _HomeTab extends StatelessWidget {
                   ...qrProvider.qrList.take(3).map((qr) => Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.divider),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Colors.black.withValues(alpha: 0.02),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -445,15 +439,15 @@ class _HomeTab extends StatelessWidget {
                         height: 50,
                         decoration: BoxDecoration(
                           color: qr.isActive 
-                              ? AppTheme.primary.withOpacity(0.1) 
-                              : Colors.grey[100],
+                              ? Theme.of(context).primaryColor.withValues(alpha: 0.1) 
+                              : Theme.of(context).disabledColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           Icons.qr_code_2_rounded,
                           color: qr.isActive 
-                              ? AppTheme.primary 
-                              : Colors.grey,
+                              ? Theme.of(context).primaryColor 
+                              : Theme.of(context).disabledColor,
                           size: 28,
                         ),
                       ),
@@ -463,14 +457,14 @@ class _HomeTab extends StatelessWidget {
                       ),
                       subtitle: Text(
                         '/${qr.slug}',
-                        style: TextStyle(color: AppTheme.primary.withOpacity(0.8)),
+                        style: TextStyle(color: Theme.of(context).primaryColor.withValues(alpha: 0.8)),
                       ),
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: qr.isActive 
-                              ? AppTheme.success.withOpacity(0.1) 
-                              : Colors.grey.withOpacity(0.1),
+                              ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1) 
+                              : Theme.of(context).disabledColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -478,7 +472,7 @@ class _HomeTab extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: qr.isActive ? AppTheme.success : Colors.grey,
+                            color: qr.isActive ? Theme.of(context).colorScheme.secondary : Theme.of(context).disabledColor,
                           ),
                         ),
                       ),
@@ -514,7 +508,7 @@ class _QuickActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.surface,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -523,7 +517,7 @@ class _QuickActionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.divider),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -531,7 +525,7 @@ class _QuickActionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 28, color: color),
@@ -563,10 +557,8 @@ class _SettingsTab extends StatelessWidget {
     final billingProvider = context.watch<BillingProvider>();
     
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Ajustes'),
-        backgroundColor: AppTheme.background,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -575,12 +567,12 @@ class _SettingsTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppTheme.divider),
+              border: Border.all(color: Theme.of(context).dividerColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -592,7 +584,7 @@ class _SettingsTab extends StatelessWidget {
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2), width: 2),
                   ),
                   child: UserAvatar(
                     name: authProvider.user?.name,
@@ -615,17 +607,15 @@ class _SettingsTab extends StatelessWidget {
                       const Gap(4),
                       Text(
                         authProvider.user?.email ?? '',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const Gap(8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: billingProvider.isPaid 
-                              ? AppTheme.success.withOpacity(0.1)
-                              : AppTheme.primary.withOpacity(0.1),
+                              ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1)
+                              : Theme.of(context).primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -633,7 +623,7 @@ class _SettingsTab extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: billingProvider.isPaid ? AppTheme.success : AppTheme.primary,
+                            color: billingProvider.isPaid ? Theme.of(context).colorScheme.secondary : Theme.of(context).primaryColor,
                           ),
                         ),
                       ),
@@ -690,9 +680,9 @@ class _SettingsTab extends StatelessWidget {
                       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No se pudo generar el reporte'),
-                          backgroundColor: AppTheme.error,
+                        SnackBar(
+                          content: const Text('No se pudo generar el reporte'),
+                          backgroundColor: Theme.of(context).colorScheme.error,
                         ),
                       );
                     }
@@ -755,7 +745,7 @@ class _SettingsTab extends StatelessWidget {
                     ),
                     FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.error,
+                        backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                       ),
                       onPressed: () => Navigator.pop(context, true),
                       child: const Text('Cerrar Sesión'),
@@ -769,8 +759,8 @@ class _SettingsTab extends StatelessWidget {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.error.withOpacity(0.1),
-              foregroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+              foregroundColor: Theme.of(context).colorScheme.error,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
@@ -789,7 +779,7 @@ class _SettingsTab extends StatelessWidget {
             child: Text(
               'PromusLink Mobile v1.0.0',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary.withOpacity(0.5),
+                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -812,7 +802,6 @@ class _SectionTitle extends StatelessWidget {
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.bold,
-          color: AppTheme.textSecondary,
           letterSpacing: 1.2,
         ),
       ),
@@ -828,9 +817,9 @@ class _SettingsGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         children: children.asMap().entries.map((entry) {
@@ -840,7 +829,7 @@ class _SettingsGroup extends StatelessWidget {
             children: [
               entry.value,
               if (!isLast)
-                Divider(height: 1, color: AppTheme.divider.withOpacity(0.5), indent: 56),
+                Divider(height: 1, color: Theme.of(context).dividerColor.withValues(alpha: 0.5), indent: 56),
             ],
           );
         }).toList(),
@@ -866,16 +855,16 @@ class _SettingsTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppTheme.background,
+          color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, size: 20, color: AppTheme.textPrimary),
+        child: Icon(icon, size: 20, color: Theme.of(context).iconTheme.color),
       ),
       title: Text(
         title,
         style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
-      trailing: Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textSecondary),
+      trailing: Icon(Icons.chevron_right_rounded, size: 20, color: Theme.of(context).disabledColor),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

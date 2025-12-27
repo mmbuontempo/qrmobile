@@ -38,13 +38,11 @@ class _FoldersScreenState extends State<FoldersScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.folder_open_rounded, size: 64, color: AppTheme.textSecondary),
+            const Icon(Icons.folder_open_rounded, size: 64, color: Colors.grey),
             const Gap(16),
             Text(
               'Sin carpetas',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const Gap(24),
             FilledButton.icon(
@@ -58,7 +56,6 @@ class _FoldersScreenState extends State<FoldersScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateDialog(context),
         child: const Icon(Icons.create_new_folder_rounded),
@@ -68,7 +65,7 @@ class _FoldersScreenState extends State<FoldersScreen> {
         child: ListView.separated(
           padding: const EdgeInsets.all(20),
           itemCount: folderProvider.folders.length,
-          separatorBuilder: (_, __) => const Gap(12),
+          separatorBuilder: (context, index) => const Gap(12),
           itemBuilder: (context, index) {
             final folder = folderProvider.folders[index];
             return _FolderCard(folder: folder);
@@ -126,12 +123,12 @@ class _FolderCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -153,7 +150,7 @@ class _FolderCard extends StatelessWidget {
             leading: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color),
@@ -164,10 +161,10 @@ class _FolderCard extends StatelessWidget {
             ),
             subtitle: Text(
               '${folder.qrCount} QRs',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textSecondary),
+              icon: Icon(Icons.more_vert_rounded, color: Theme.of(context).disabledColor),
               onSelected: (value) {
                 if (value == 'edit') {
                   showModalBottomSheet(

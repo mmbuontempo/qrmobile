@@ -32,12 +32,12 @@ class QrCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -69,7 +69,7 @@ class QrCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.divider),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
@@ -78,6 +78,7 @@ class QrCard extends StatelessWidget {
                         version: QrVersions.auto,
                         size: 80,
                         padding: const EdgeInsets.all(8),
+                        backgroundColor: Colors.white,
                       ),
                     ),
                   ),
@@ -97,7 +98,6 @@ class QrCard extends StatelessWidget {
                               qr.name,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -111,13 +111,13 @@ class QrCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.background,
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '/${qr.slug}',
                           style: TextStyle(
-                            color: AppTheme.primary,
+                            color: Theme.of(context).primaryColor,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'monospace',
@@ -128,14 +128,12 @@ class QrCard extends StatelessWidget {
                         const Gap(6),
                         Row(
                           children: [
-                            const Icon(Icons.link_rounded, size: 14, color: AppTheme.textSecondary),
+                            Icon(Icons.link_rounded, size: 14, color: Theme.of(context).textTheme.bodySmall?.color),
                             const Gap(4),
                             Expanded(
                               child: Text(
                                 qr.targetUrl!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -168,7 +166,7 @@ class QrCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textSecondary),
+                            icon: Icon(Icons.more_vert_rounded, color: Theme.of(context).disabledColor),
                             onSelected: (value) async {
                               if (value == 'duplicate') {
                                 _confirmDuplicate(context, qr);
@@ -309,8 +307,8 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isActive 
-            ? AppTheme.success.withOpacity(0.1) 
-            : AppTheme.textSecondary.withOpacity(0.1),
+            ? AppTheme.success.withValues(alpha: 0.1) 
+            : Theme.of(context).disabledColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -321,7 +319,7 @@ class _StatusBadge extends StatelessWidget {
             height: 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isActive ? AppTheme.success : AppTheme.textSecondary,
+              color: isActive ? AppTheme.success : Theme.of(context).disabledColor,
             ),
           ),
           const Gap(4),
@@ -330,7 +328,7 @@ class _StatusBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: isActive ? AppTheme.success : AppTheme.textSecondary,
+              color: isActive ? AppTheme.success : Theme.of(context).disabledColor,
             ),
           ),
         ],
@@ -354,7 +352,7 @@ class _ActionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? AppTheme.textSecondary;
+    final chipColor = color ?? Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
     
     return Material(
       color: Colors.transparent,
@@ -364,9 +362,9 @@ class _ActionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: chipColor.withOpacity(0.08),
+            color: chipColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: chipColor.withOpacity(0.1)),
+            border: Border.all(color: chipColor.withValues(alpha: 0.1)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

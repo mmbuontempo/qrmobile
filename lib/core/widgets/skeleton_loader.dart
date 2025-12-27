@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../theme/app_theme.dart';
 
 class SkeletonLoader extends StatelessWidget {
   final double width;
@@ -18,14 +17,18 @@ class SkeletonLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = color ?? (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05));
+    final shimmerColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.4);
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: color ?? AppTheme.textSecondary.withOpacity(0.1),
+        color: baseColor,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     ).animate(onPlay: (controller) => controller.repeat())
-      .shimmer(duration: 1200.ms, color: Colors.white.withOpacity(0.4));
+      .shimmer(duration: 1200.ms, color: shimmerColor);
   }
 }

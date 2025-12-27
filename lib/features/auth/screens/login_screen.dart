@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      // backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Default
       body: Stack(
         children: [
           // Background Gradient Mesh
@@ -53,10 +53,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.primary.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.2),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                     blurRadius: 100,
                     spreadRadius: 20,
                   ),
@@ -72,10 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.secondary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.secondary.withOpacity(0.2),
+                    color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
                     blurRadius: 100,
                     spreadRadius: 20,
                   ),
@@ -98,20 +98,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primary.withOpacity(0.15),
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
                               blurRadius: 40,
                               offset: const Offset(0, 20),
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.qr_code_2_rounded,
                           size: 64,
-                          color: AppTheme.primary,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     )
@@ -127,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           'PromusLink',
                           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: AppTheme.textPrimary,
                             letterSpacing: -1,
                           ),
                         ),
@@ -136,7 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Gestiona tus códigos QR dinámicos\nde forma inteligente y segura.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.textSecondary,
                             height: 1.5,
                           ),
                         ),
@@ -152,12 +150,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: AppTheme.surface,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppTheme.divider),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -177,19 +175,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           FilledButton(
                             onPressed: _isLoading ? null : _signInWithGoogle,
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppTheme.textPrimary,
-                              side: const BorderSide(color: AppTheme.divider),
+                              backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white 
+                                  : Colors.white, // Google button usually stays white
+                              foregroundColor: Colors.black87,
+                              side: BorderSide(color: Theme.of(context).dividerColor),
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: _isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation(AppTheme.primary),
+                                      valueColor: AlwaysStoppedAnimation(Theme.of(context).primaryColor),
                                     ),
                                   )
                                 : Row(
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                                         width: 24,
                                         height: 24,
-                                        errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
+                                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 24),
                                       ),
                                       const Gap(12),
                                       const Text(
@@ -221,13 +221,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Icon(Icons.lock_outline_rounded, 
                                 size: 16, 
-                                color: AppTheme.textSecondary.withOpacity(0.7)
+                                color: Theme.of(context).textTheme.bodySmall?.color
                               ),
                               const Gap(8),
                               Text(
                                 'Tus datos están protegidos y seguros',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textSecondary.withOpacity(0.7),
                                   fontSize: 12,
                                 ),
                               ),
@@ -246,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'v1.0.0 • PromusLink',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary.withOpacity(0.5),
+                                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                       ),
                     ).animate().fadeIn(delay: 800.ms),
                   ],

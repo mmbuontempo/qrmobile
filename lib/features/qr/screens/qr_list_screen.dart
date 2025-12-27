@@ -18,19 +18,17 @@ class QrListScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppTheme.background,
         appBar: AppBar(
           title: const Text('Mis QRs'),
-          backgroundColor: AppTheme.background,
           centerTitle: false,
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            tabs: const [
               Tab(text: 'Todos'),
               Tab(text: 'Carpetas'),
             ],
-            indicatorColor: AppTheme.primary,
-            labelColor: AppTheme.primary,
-            unselectedLabelColor: AppTheme.textSecondary,
+            indicatorColor: Theme.of(context).primaryColor,
+            labelColor: Theme.of(context).primaryColor,
+            unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
           ),
           actions: [
             IconButton(
@@ -53,8 +51,8 @@ class QrListScreen extends StatelessWidget {
           onPressed: () => _showCreateDialog(context),
           icon: const Icon(Icons.add_rounded),
           label: const Text('Crear QR', style: TextStyle(fontWeight: FontWeight.bold)),
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           elevation: 4,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ).animate().scale(delay: 500.ms, curve: Curves.easeOutBack),
@@ -109,8 +107,8 @@ class _QrListTabState extends State<_QrListTab> {
       return ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: 5,
-        separatorBuilder: (_, __) => const Gap(16),
-        itemBuilder: (_, __) => const SkeletonLoader(
+        separatorBuilder: (context, index) => const Gap(16),
+        itemBuilder: (context, index) => const SkeletonLoader(
           width: double.infinity,
           height: 100,
           borderRadius: 20,
@@ -126,7 +124,7 @@ class _QrListTabState extends State<_QrListTab> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: AppTheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.error),
@@ -134,15 +132,15 @@ class _QrListTabState extends State<_QrListTab> {
             const Gap(24),
             Text(
               qrProvider.errorMessage ?? 'Error al cargar',
-              style: const TextStyle(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const Gap(24),
             FilledButton.icon(
               onPressed: () => qrProvider.loadQrList(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Reintentar'),
@@ -160,25 +158,22 @@ class _QrListTabState extends State<_QrListTab> {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.05),
+                color: AppTheme.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.qr_code_2_rounded, size: 64, color: AppTheme.primaryLight),
+              child: Icon(Icons.qr_code_2_rounded, size: 64, color: Theme.of(context).primaryColorLight),
             ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
             const Gap(24),
             Text(
               'No tienes QRs todavía',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
             const Gap(8),
             Text(
               'Crea tu primer QR dinámico para empezar',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium,
             ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
           ],
         ),
@@ -194,8 +189,8 @@ class _QrListTabState extends State<_QrListTab> {
 
     return RefreshIndicator(
       onRefresh: () => qrProvider.loadQrList(),
-      color: AppTheme.primary,
-      backgroundColor: AppTheme.surface,
+      color: Theme.of(context).primaryColor,
+      backgroundColor: Theme.of(context).cardColor,
       child: Column(
         children: [
           Padding(
@@ -207,19 +202,19 @@ class _QrListTabState extends State<_QrListTab> {
                 hintText: 'Buscar QR...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
-                fillColor: AppTheme.surface,
+                fillColor: Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.divider),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppTheme.divider),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.primary),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
                 ),
                 suffixIcon: _searchQuery.isNotEmpty 
                   ? IconButton(
@@ -239,11 +234,11 @@ class _QrListTabState extends State<_QrListTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.search_off_rounded, size: 48, color: AppTheme.textSecondary),
+                        Icon(Icons.search_off_rounded, size: 48, color: Theme.of(context).disabledColor),
                         const Gap(16),
                         Text(
                           'No se encontraron resultados',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),

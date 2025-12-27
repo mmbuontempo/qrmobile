@@ -5,7 +5,6 @@ import 'package:gap/gap.dart';
 import 'dart:math' as math;
 import '../../../core/theme/app_theme.dart';
 import '../providers/qr_provider.dart';
-import '../../../core/models/qr_model.dart';
 
 class QrAnalyticsScreen extends StatefulWidget {
   final String qrId;
@@ -89,7 +88,7 @@ class _QrAnalyticsScreenState extends State<QrAnalyticsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
+                          color: AppTheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.qr_code_2_rounded, color: AppTheme.primary),
@@ -153,9 +152,9 @@ class _QrAnalyticsScreenState extends State<QrAnalyticsScreen> {
                     height: 200,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.divider),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: _SimpleBarChart(data: _data!['dailyScans']),
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
@@ -194,9 +193,9 @@ class _QrAnalyticsScreenState extends State<QrAnalyticsScreen> {
                   const Gap(16),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.divider),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: Column(
                       children: [
@@ -238,12 +237,12 @@ class _MetricCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.05),
+            color: color.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -255,7 +254,7 @@ class _MetricCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 20, color: color),
@@ -265,14 +264,11 @@ class _MetricCard extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
             ),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
@@ -298,16 +294,16 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.divider),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 20, color: color),
@@ -319,7 +315,7 @@ class _InfoCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Text(
                   value,
@@ -370,8 +366,8 @@ class _SimpleBarChart extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        AppTheme.primary,
-                        AppTheme.primary.withOpacity(0.6),
+                        Theme.of(context).primaryColor,
+                        Theme.of(context).primaryColor.withValues(alpha: 0.6),
                       ],
                     ),
                   ),
@@ -383,7 +379,7 @@ class _SimpleBarChart extends StatelessWidget {
                 const Gap(8),
                 Text(
                   '${date.day}/${date.month}',
-                  style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             );
@@ -431,15 +427,15 @@ class _LocationRow extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${(data['percent'] * 100).toInt()}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.primary,
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -448,7 +444,7 @@ class _LocationRow extends StatelessWidget {
             ],
           ),
         ),
-        if (!isLast) const Divider(height: 1, indent: 20, endIndent: 20),
+        if (!isLast) Divider(height: 1, indent: 20, endIndent: 20, color: Theme.of(context).dividerColor),
       ],
     );
   }
@@ -466,7 +462,6 @@ class _SectionTitle extends StatelessWidget {
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.bold,
-          color: AppTheme.textSecondary,
           letterSpacing: 1.2,
         ),
       ),

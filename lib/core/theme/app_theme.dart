@@ -30,8 +30,7 @@ class AppTheme {
         seedColor: primary,
         primary: primary,
         secondary: secondary,
-        surface: surface,
-        background: background,
+        surface: background,
         error: error,
         brightness: Brightness.light,
       ),
@@ -128,7 +127,7 @@ class AppTheme {
           borderSide: const BorderSide(color: error),
         ),
         labelStyle: const TextStyle(color: textSecondary),
-        hintStyle: TextStyle(color: textSecondary.withOpacity(0.5)),
+        hintStyle: TextStyle(color: textSecondary.withValues(alpha: 0.5)),
       ),
     );
   }
@@ -146,8 +145,7 @@ class AppTheme {
         seedColor: primary,
         primary: primary,
         secondary: secondary,
-        surface: darkSurface,
-        background: darkBackground,
+        surface: darkBackground,
         error: error,
         brightness: Brightness.dark,
       ),
@@ -201,7 +199,7 @@ class AppTheme {
           borderSide: const BorderSide(color: primary, width: 2),
         ),
         labelStyle: const TextStyle(color: darkTextSecondary),
-        hintStyle: TextStyle(color: darkTextSecondary.withOpacity(0.5)),
+        hintStyle: TextStyle(color: darkTextSecondary.withValues(alpha: 0.5)),
       ),
       
       // Floating Action Button
@@ -213,12 +211,12 @@ class AppTheme {
       // Navigation Bar
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: darkSurface,
-        indicatorColor: primary.withOpacity(0.2),
-        labelTextStyle: MaterialStateProperty.all(
+        indicatorColor: primary.withValues(alpha: 0.2),
+        labelTextStyle: WidgetStateProperty.all(
           const TextStyle(color: darkTextSecondary, fontWeight: FontWeight.w500),
         ),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: primaryLight);
           }
           return const IconThemeData(color: darkTextSecondary);

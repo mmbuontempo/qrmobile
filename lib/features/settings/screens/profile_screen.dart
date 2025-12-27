@@ -42,10 +42,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = authProvider.user;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Mi Perfil'),
-        backgroundColor: AppTheme.background,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -62,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primary, width: 2),
+                        border: Border.all(color: Theme.of(context).primaryColor, width: 2),
                       ),
                       child: UserAvatar(
                         name: user?.name,
@@ -76,8 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       right: 0,
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
@@ -104,11 +102,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 initialValue: user?.email,
                 readOnly: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Correo Electrónico',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  prefixIcon: const Icon(Icons.email_outlined),
                   filled: true,
-                  fillColor: Colors.black12, // Slightly darker to indicate read-only
+                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withValues(alpha: 0.05) 
+                      : Colors.black12,
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
@@ -151,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Gap(20),
 
               TextButton.icon(
-                onPressed: () => _confirmDeleteAccount(context),
+                onPressed: _confirmDeleteAccount,
                 icon: const Icon(Icons.delete_forever_rounded, size: 20),
                 label: const Text('Eliminar Cuenta'),
                 style: TextButton.styleFrom(
@@ -165,7 +165,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _confirmDeleteAccount(BuildContext context) async {
+  Future<void> _confirmDeleteAccount() async {
+    final settingsProvider = context.read<SettingsProvider>();
+    final authProvider = context.read<AuthProvider>();
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -180,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Eliminar definitivamente'),
           ),
@@ -188,29 +191,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
-    if (confirm == true && mounted) {
-      setState(() => _isLoading = true);
-      
-      final success = await context.read<SettingsProvider>().deleteAccount();
-      
-      if (mounted) {
-        setState(() => _isLoading = false);
-        if (success) {
-          // Logout local and redirect
-          await context.read<AuthProvider>().logout();
-          if (mounted) {
-            Navigator.pop(context); // Close profile
-            // App wrapper handles auth state change
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error al eliminar la cuenta. Intenta nuevamente.'),
-              backgroundColor: AppTheme.error,
-            ),
-          );
-        }
-      }
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+    
+    final success = await settingsProvider.deleteAccount();
+    
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+    
+    if (success) {
+      // Logout local and redirect
+      await authProvider.logout();
+      if (!mounted) return;
+      Navigator.pop(context); // Close profile
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Error al eliminar la cuenta. Intenta nuevamente.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -235,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Perfil actualizado correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Colors.green, // Success color
             ),
           );
           Navigator.pop(context);
@@ -244,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.read<SettingsProvider>().errorMessage ?? 'Error al actualizar'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

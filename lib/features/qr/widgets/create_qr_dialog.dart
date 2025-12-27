@@ -56,9 +56,9 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
     final folderProvider = context.watch<FolderProvider>();
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
@@ -77,18 +77,17 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
                   ),
-                  child: const Icon(Icons.qr_code_2_rounded, size: 24, color: AppTheme.primary),
+                  child: Icon(Icons.qr_code_2_rounded, size: 24, color: Theme.of(context).primaryColor),
                 ),
                 const Gap(16),
                 Text(
                   'Crear Nuevo QR',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
                   ),
                 ),
               ],
@@ -164,8 +163,7 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
 
             Text(
               'Carpeta (Opcional)',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -204,8 +202,8 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: AppTheme.divider),
-                      foregroundColor: AppTheme.textSecondary,
+                      side: BorderSide(color: Theme.of(context).dividerColor),
+                      foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                     child: const Text('Cancelar'),
                   ),
@@ -216,7 +214,7 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
                   child: FilledButton.icon(
                     onPressed: _isLoading ? null : _createQr,
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
+                      backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 0,
@@ -318,13 +316,13 @@ class _FolderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = colorName != null ? _getFolderColor(colorName) : AppTheme.textSecondary;
+    final color = colorName != null ? _getFolderColor(colorName) : Theme.of(context).disabledColor;
     final backgroundColor = isSelected 
-        ? (colorName != null ? color.withOpacity(0.1) : AppTheme.primary.withOpacity(0.1)) 
-        : AppTheme.surface;
+        ? (colorName != null ? color.withValues(alpha: 0.1) : Theme.of(context).primaryColor.withValues(alpha: 0.1)) 
+        : Theme.of(context).cardColor;
     final borderColor = isSelected 
-        ? (colorName != null ? color : AppTheme.primary) 
-        : AppTheme.divider;
+        ? (colorName != null ? color : Theme.of(context).primaryColor) 
+        : Theme.of(context).dividerColor;
 
     return Material(
       color: backgroundColor,
@@ -341,7 +339,7 @@ class _FolderChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 18, color: isSelected ? AppTheme.primary : AppTheme.textSecondary),
+                Icon(icon, size: 18, color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).disabledColor),
                 const Gap(8),
               ] else if (colorName != null) ...[
                 Icon(Icons.folder_rounded, size: 18, color: color),
@@ -351,8 +349,8 @@ class _FolderChip extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: isSelected 
-                      ? (colorName != null ? color : AppTheme.primary) 
-                      : AppTheme.textSecondary,
+                      ? (colorName != null ? color : Theme.of(context).primaryColor) 
+                      : Theme.of(context).textTheme.bodyMedium?.color,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 13,
                 ),
@@ -362,7 +360,7 @@ class _FolderChip extends StatelessWidget {
                 Icon(
                   Icons.check_circle_rounded,
                   size: 16,
-                  color: colorName != null ? color : AppTheme.primary,
+                  color: colorName != null ? color : Theme.of(context).primaryColor,
                 ),
               ],
             ],

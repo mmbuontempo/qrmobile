@@ -31,10 +31,8 @@ class FolderDetailScreen extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(currentFolder.name),
-        backgroundColor: AppTheme.background,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_rounded),
@@ -42,7 +40,7 @@ class FolderDetailScreen extends StatelessWidget {
             tooltip: 'Editar Carpeta',
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error),
+            icon: Icon(Icons.delete_outline_rounded, color: Theme.of(context).colorScheme.error),
             onPressed: () => _confirmDelete(context, currentFolder),
             tooltip: 'Eliminar Carpeta',
           ),
@@ -57,7 +55,7 @@ class FolderDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.05),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -70,16 +68,13 @@ class FolderDetailScreen extends StatelessWidget {
                   Text(
                     'Carpeta vacía',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const Gap(8),
                   Text(
                     'Mueve QRs existentes o crea uno nuevo aquí',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const Gap(32),
                   FilledButton.icon(

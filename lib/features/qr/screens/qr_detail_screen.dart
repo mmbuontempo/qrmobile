@@ -81,17 +81,14 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
 
     if (qr == null) {
       return Scaffold(
-        backgroundColor: AppTheme.background,
-        appBar: AppBar(title: const Text('QR no encontrado'), backgroundColor: AppTheme.background),
+        appBar: AppBar(title: const Text('QR no encontrado')),
         body: const Center(child: Text('El QR no existe')),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar QR' : 'Detalles del QR'),
-        backgroundColor: AppTheme.background,
         centerTitle: false,
         actions: [
           if (!_isEditing)
@@ -131,12 +128,12 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppTheme.divider),
+                border: Border.all(color: Theme.of(context).dividerColor),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.05),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -149,12 +146,13 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.divider),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                     ),
                     child: QrImageView(
                       data: qr.qrUrl,
                       version: QrVersions.auto,
                       size: 200,
+                      backgroundColor: Colors.white,
                     ),
                   ).animate().scale(curve: Curves.easeOutBack, duration: 500.ms),
                   
@@ -168,13 +166,13 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: _isCopied 
-                            ? AppTheme.success.withOpacity(0.1) 
-                            : AppTheme.primary.withOpacity(0.05),
+                            ? AppTheme.success.withValues(alpha: 0.1) 
+                            : Theme.of(context).primaryColor.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: _isCopied 
-                              ? AppTheme.success.withOpacity(0.5) 
-                              : AppTheme.primary.withOpacity(0.1)
+                              ? AppTheme.success.withValues(alpha: 0.5) 
+                              : Theme.of(context).primaryColor.withValues(alpha: 0.1)
                         ),
                       ),
                       child: Row(
@@ -184,7 +182,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                             child: Text(
                               qr.qrUrl,
                               style: TextStyle(
-                                color: _isCopied ? AppTheme.success : AppTheme.primary,
+                                color: _isCopied ? AppTheme.success : Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -200,7 +198,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                               _isCopied ? Icons.check_circle_rounded : Icons.copy_rounded,
                               key: ValueKey(_isCopied),
                               size: 16, 
-                              color: _isCopied ? AppTheme.success : AppTheme.primary
+                              color: _isCopied ? AppTheme.success : Theme.of(context).primaryColor
                             ),
                           ),
                         ],
@@ -223,7 +221,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                     label: const Text('Compartir'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: AppTheme.surface,
+                      backgroundColor: Theme.of(context).cardColor,
                     ),
                   ),
                 ),
@@ -251,9 +249,9 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.surface,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppTheme.divider),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +260,6 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                         'Información del QR',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const Gap(20),
@@ -338,9 +335,9 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.divider),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Column(
                   children: [
@@ -392,7 +389,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                       icon: Icons.qr_code_scanner_rounded,
                       label: 'Estado',
                       value: qr.isActive ? 'Activo' : 'Pausado',
-                      valueColor: qr.isActive ? AppTheme.success : AppTheme.textSecondary,
+                      valueColor: qr.isActive ? AppTheme.success : Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ],
                 ),
@@ -407,8 +404,8 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
               icon: const Icon(Icons.delete_outline_rounded, size: 20),
               label: const Text('Eliminar QR'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.error.withOpacity(0.1),
-                foregroundColor: AppTheme.error,
+                backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+                foregroundColor: Theme.of(context).colorScheme.error,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: 0,
               ),
@@ -525,10 +522,10 @@ class _InfoRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.background,
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 20, color: AppTheme.textSecondary),
+          child: Icon(icon, size: 20, color: Theme.of(context).iconTheme.color),
         ),
         const Gap(16),
         Expanded(
@@ -537,19 +534,17 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               const Gap(4),
               Text(
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: valueColor ?? (isLink ? AppTheme.primary : AppTheme.textPrimary),
+                  color: valueColor ?? (isLink ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyLarge?.color),
                   fontWeight: FontWeight.w500,
                   fontFamily: isMonospace ? 'monospace' : null,
                   decoration: isLink ? TextDecoration.underline : null,
-                  decorationColor: AppTheme.primary,
+                  decorationColor: Theme.of(context).primaryColor,
                 ),
               ),
             ],

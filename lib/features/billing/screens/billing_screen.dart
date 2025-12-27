@@ -5,7 +5,6 @@ import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/billing_provider.dart';
-import '../../../core/models/plan_model.dart';
 
 class BillingScreen extends StatefulWidget {
   const BillingScreen({super.key});
@@ -30,16 +29,13 @@ class _BillingScreenState extends State<BillingScreen> {
 
     if (billingProvider.isLoading && subscription == null) {
       return const Scaffold(
-        backgroundColor: AppTheme.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Suscripción'),
-        backgroundColor: AppTheme.background,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -58,19 +54,22 @@ class _BillingScreenState extends State<BillingScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
+                  colors: [
+                  Theme.of(context).primaryColor, 
+                  Theme.of(context).primaryColor.withValues(alpha: 0.9)
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
               child: Column(
                 children: [
                   const Text(
@@ -95,7 +94,7 @@ class _BillingScreenState extends State<BillingScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -169,7 +168,8 @@ class _BillingScreenState extends State<BillingScreen> {
               FilledButton.icon(
                 onPressed: _openUpgradeUrl,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                   minimumSize: const Size(double.infinity, 50),
                 ),
@@ -182,9 +182,7 @@ class _BillingScreenState extends State<BillingScreen> {
             Text(
               'La gestión de pagos se realiza de forma segura a través de nuestro portal web.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -224,7 +222,7 @@ class _StatItem extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 12,
             ),
           ),
@@ -251,25 +249,25 @@ class _FeatureTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isEnabled ? AppTheme.success.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+          color: isEnabled ? AppTheme.success.withValues(alpha: 0.1) : Theme.of(context).disabledColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
-          color: isEnabled ? AppTheme.success : Colors.grey,
+          color: isEnabled ? AppTheme.success : Theme.of(context).disabledColor,
           size: 20,
         ),
       ),
       title: Text(
         label,
         style: TextStyle(
-          color: isEnabled ? AppTheme.textPrimary : AppTheme.textSecondary,
+          color: isEnabled ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).disabledColor,
           decoration: isEnabled ? null : TextDecoration.lineThrough,
         ),
       ),
       trailing: isEnabled
           ? const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 20)
-          : const Icon(Icons.lock_outline_rounded, color: Colors.grey, size: 20),
+          : Icon(Icons.lock_outline_rounded, color: Theme.of(context).disabledColor, size: 20),
     );
   }
 }
@@ -286,7 +284,6 @@ class _SectionTitle extends StatelessWidget {
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppTheme.textSecondary,
             letterSpacing: 1.2,
           ),
         ),

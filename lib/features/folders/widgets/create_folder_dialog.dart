@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/folder_provider.dart';
@@ -63,9 +62,9 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
@@ -106,7 +105,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _colors.length,
-                separatorBuilder: (_, __) => const Gap(12),
+                separatorBuilder: (context, index) => const Gap(12),
                 itemBuilder: (context, index) {
                   final entry = _colors.entries.elementAt(index);
                   final isSelected = _selectedColor == entry.key;
@@ -116,7 +115,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: entry.value.withOpacity(0.2),
+                        color: entry.value.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isSelected ? entry.value : Colors.transparent,
@@ -150,7 +149,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _icons.length,
-                separatorBuilder: (_, __) => const Gap(12),
+                separatorBuilder: (context, index) => const Gap(12),
                 itemBuilder: (context, index) {
                   final entry = _icons.entries.elementAt(index);
                   final isSelected = _selectedIcon == entry.key;
@@ -160,15 +159,15 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.primary.withOpacity(0.1) : AppTheme.background,
+                        color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? AppTheme.primary : AppTheme.divider,
+                          color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
                         ),
                       ),
                       child: Icon(
                         entry.value,
-                        color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                        color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).disabledColor,
                         size: 20,
                       ),
                     ),
@@ -182,7 +181,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
             FilledButton(
               onPressed: _isLoading ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
+                backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
