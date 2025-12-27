@@ -6,6 +6,10 @@ import '../core/theme/app_theme.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
+import '../main.dart'; // Import main to access setupSessionExpiredHandler
+
+import '../core/services/deep_link_service.dart';
+import '../features/billing/providers/billing_provider.dart';
 
 class PromusLinkApp extends StatelessWidget {
   const PromusLinkApp({super.key});
@@ -16,8 +20,8 @@ class PromusLinkApp extends StatelessWidget {
       title: 'PromusLink',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // TODO: Implement dark theme in AppTheme
-      themeMode: ThemeMode.light, 
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: const AuthWrapper(),
     );
   }
@@ -35,8 +39,43 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Configurar handler global de sesión
+      setupSessionExpiredHandler(context);
+      
+      // Verificar estado inicial
       context.read<AuthProvider>().checkAuthStatus();
+
+      // Inicializar Deep Links
+      DeepLinkService.instance.init(
+        onAuthCode: (code) async {
+          debugPrint('Auth code received via deep link');
+          final success = await context.read<AuthProvider>().loginWithCode(code);
+          if (success && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Sesión iniciada correctamente')),
+            );
+          }
+        },
+        onBillingSuccess: () {
+          debugPrint('Billing success received via deep link');
+          context.read<BillingProvider>().loadSubscription();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Pago exitoso! Tu plan ha sido actualizado.'),
+                backgroundColor: AppTheme.success,
+              ),
+            );
+          }
+        },
+      );
     });
+  }
+
+  @override
+  void dispose() {
+    DeepLinkService.instance.dispose();
+    super.dispose();
   }
 
   @override

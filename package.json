@@ -1,0 +1,20 @@
+{
+  "name": "promuslink-mobile",
+  "version": "1.0.0",
+  "description": "Promuslink Mobile Application",
+  "scripts": {
+    "deploy": "node scripts/deploy-android.js",
+    "deploy:android": "node scripts/deploy-android.js",
+    "deploy:quick": "node scripts/deploy-android.js -y",
+    "deploy:retry": "node scripts/deploy-android.js --no-build -y",
+    "build:android": "flutter build appbundle --release",
+    "clean": "flutter clean && flutter pub get",
+    "version:show": "node -e \"const fs=require('fs');const p=fs.readFileSync('pubspec.yaml','utf8').match(/version:\\s*(.+)/)[1];console.log('Versión actual:',p)\""
+  },
+  "devDependencies": {
+    "chalk": "^4.1.2",
+    "googleapis": "^169.0.0",
+    "inquirer": "^8.2.5",
+    "shelljs": "^0.8.5"
+  }
+}

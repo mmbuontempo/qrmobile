@@ -98,13 +98,19 @@ class QrProvider extends ChangeNotifier {
     required String name,
     required String slug,
     required String targetUrl,
+    String? folderId,
   }) async {
     try {
-      final response = await _api.createQr({
+      final data = {
         'name': name,
         'slug': slug,
         'targetUrl': targetUrl,
-      });
+      };
+      if (folderId != null) {
+        data['folderId'] = folderId;
+      }
+
+      final response = await _api.createQr(data);
 
       if (response.statusCode == 201) {
         await loadQrList();
@@ -157,7 +163,79 @@ class QrProvider extends ChangeNotifier {
   }
 
   Future<bool> toggleQrStatus(QrModel qr) async {
-    return updateQr(qr.id, {'isActive': !qr.isActive});
+    try {
+      // Usar endpoint específico de toggle según audit
+      final response = await _api.toggleQr(qr.id);
+      if (response.statusCode == 200) {
+        // Actualizar localmente sin recargar todo para mejor UX
+        final index = _qrList.indexWhere((q) => q.id == qr.id);
+        if (index != -1) {
+          _qrList[index] = qr.copyWith(isActive: !qr.isActive);
+          notifyListeners();
+        }
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Toggle QR error: $e');
+      _errorMessage = 'Error al cambiar estado';
+    }
+    notifyListeners();
+    return false;
+  }
+
+  Future<bool> duplicateQr(QrModel qr) async {
+    try {
+      final response = await _api.duplicateQr(qr.id);
+      if (response.statusCode == 201) {
+        await loadQrList(); // Recargar para ver el nuevo
+        return true;
+      } else if (response.statusCode == 403) {
+        _errorMessage = 'Límite de plan alcanzado';
+      }
+    } catch (e) {
+      debugPrint('Duplicate QR error: $e');
+      _errorMessage = 'Error al duplicar QR';
+    }
+    notifyListeners();
+    return false;
+  }
+
+  Future<Map<String, dynamic>?> getQrAnalytics(String id) async {
+    try {
+      final response = await _api.getQrAnalytics(id);
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getQrRules(String id) async {
+    try {
+      final response = await _api.getQrRules(id);
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+    } catch (e) {
+      debugPrint('Get rules error: $e');
+    }
+    return null;
+  }
+
+  Future<bool> updateQrRules(String id, Map<String, dynamic> rules) async {
+    try {
+      final response = await _api.updateQrRules(id, rules);
+      if (response.statusCode == 200) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Update rules error: $e');
+      _errorMessage = 'Error al actualizar reglas';
+    }
+    notifyListeners();
+    return false;
   }
 
   QrModel? getQrById(String id) {

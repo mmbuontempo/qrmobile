@@ -192,4 +192,62 @@ class AuthService {
   Future<bool> isAuthenticated() async {
     return await SecureStorageService.isAuthenticated();
   }
+
+  // ===========================================================================
+  // DISPOSITIVOS Y SEGURIDAD (Audit 2.1)
+  // ===========================================================================
+
+  /// Listar dispositivos activos
+  Future<List<Map<String, dynamic>>> getDevices() async {
+    final token = await SecureStorageService.getAccessToken();
+    if (token == null) return [];
+
+    try {
+      final response = await _dio.get(
+        '${AppConstants.apiBaseUrl}/api/mobile/auth/devices',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return List<Map<String, dynamic>>.from(response.data['data'] ?? []);
+    } catch (e) {
+      debugPrint('[Auth] Error obteniendo dispositivos: $e');
+      return [];
+    }
+  }
+
+  /// Revocar sesión de un dispositivo específico
+  Future<bool> revokeDevice(String deviceId) async {
+    final token = await SecureStorageService.getAccessToken();
+    if (token == null) return false;
+
+    try {
+      await _dio.delete(
+        '${AppConstants.apiBaseUrl}/api/mobile/auth/devices/$deviceId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return true;
+    } catch (e) {
+      debugPrint('[Auth] Error revocando dispositivo: $e');
+      return false;
+    }
+  }
+
+  /// Cerrar todas las sesiones (excepto la actual si se maneja en UI)
+  /// Nota: El endpoint /logout-all revoca TODO, incluyendo el token actual.
+  Future<bool> logoutAllDevices() async {
+    final token = await SecureStorageService.getAccessToken();
+    if (token == null) return false;
+
+    try {
+      await _dio.post(
+        '${AppConstants.apiBaseUrl}/api/mobile/auth/logout-all',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      // Limpiamos localmente también
+      await logout();
+      return true;
+    } catch (e) {
+      debugPrint('[Auth] Error en logout global: $e');
+      return false;
+    }
+  }
 }

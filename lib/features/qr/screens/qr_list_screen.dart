@@ -1,55 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/skeleton_loader.dart';
 import '../providers/qr_provider.dart';
-import '../../../core/models/qr_model.dart';
-import 'qr_detail_screen.dart';
+import '../../billing/providers/billing_provider.dart';
 import '../widgets/create_qr_dialog.dart';
+import '../widgets/qr_card.dart';
+import '../../folders/screens/folders_screen.dart';
 
 class QrListScreen extends StatelessWidget {
   const QrListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final qrProvider = context.watch<QrProvider>();
-
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Mis QRs'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: AppTheme.background,
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => qrProvider.loadQrList(),
-            tooltip: 'Actualizar',
+        appBar: AppBar(
+          title: const Text('Mis QRs'),
+          backgroundColor: AppTheme.background,
+          centerTitle: false,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Todos'),
+              Tab(text: 'Carpetas'),
+            ],
+            indicatorColor: AppTheme.primary,
+            labelColor: AppTheme.primary,
+            unselectedLabelColor: AppTheme.textSecondary,
           ),
-          const Gap(8),
-        ],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () {
+                context.read<QrProvider>().loadQrList();
+              },
+              tooltip: 'Actualizar',
+            ),
+            const Gap(8),
+          ],
+        ),
+        body: const TabBarView(
+          children: [
+            _QrListTab(),
+            FoldersScreen(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showCreateDialog(context),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Crear QR', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ).animate().scale(delay: 500.ms, curve: Curves.easeOutBack),
       ),
-      body: _buildBody(context, qrProvider),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateDialog(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Crear QR', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ).animate().scale(delay: 500.ms, curve: Curves.easeOutBack),
     );
   }
 
-  Widget _buildBody(BuildContext context, QrProvider qrProvider) {
+  void _showCreateDialog(BuildContext context) {
+    final billingProvider = context.read<BillingProvider>();
+    if (billingProvider.canCreateQr) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const CreateQrDialog(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Límite de plan alcanzado'),
+          backgroundColor: AppTheme.warning,
+          action: SnackBarAction(label: 'VER PLANES', onPressed: () {}), // TODO: Go to billing
+        ),
+      );
+    }
+  }
+}
+
+class _QrListTab extends StatefulWidget {
+  const _QrListTab();
+
+  @override
+  State<_QrListTab> createState() => _QrListTabState();
+}
+
+class _QrListTabState extends State<_QrListTab> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final qrProvider = context.watch<QrProvider>();
+
     if (qrProvider.status == QrLoadingStatus.loading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation(AppTheme.primary),
+      return ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: 5,
+        separatorBuilder: (_, __) => const Gap(16),
+        itemBuilder: (_, __) => const SkeletonLoader(
+          width: double.infinity,
+          height: 100,
+          borderRadius: 20,
         ),
       );
     }
@@ -88,7 +152,7 @@ class QrListScreen extends StatelessWidget {
       );
     }
 
-    if (qrProvider.qrList.isEmpty) {
+    if (qrProvider.qrList.isEmpty && _searchQuery.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -116,293 +180,84 @@ class QrListScreen extends StatelessWidget {
                 color: AppTheme.textSecondary,
               ),
             ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-            const Gap(32),
-            FilledButton.icon(
-              onPressed: () => _showCreateDialog(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Crear mi primer QR'),
-            ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
           ],
         ),
       );
     }
 
+    final filteredList = qrProvider.qrList.where((qr) {
+      final query = _searchQuery.toLowerCase();
+      return qr.name.toLowerCase().contains(query) || 
+             qr.slug.toLowerCase().contains(query) ||
+             (qr.targetUrl?.toLowerCase().contains(query) ?? false);
+    }).toList();
+
     return RefreshIndicator(
       onRefresh: () => qrProvider.loadQrList(),
       color: AppTheme.primary,
       backgroundColor: AppTheme.surface,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 80), // Extra padding for FAB
-        itemCount: qrProvider.qrList.length,
-        itemBuilder: (context, index) {
-          final qr = qrProvider.qrList[index];
-          return _QrCard(qr: qr, index: index);
-        },
-      ),
-    );
-  }
-
-  void _showCreateDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const CreateQrDialog(),
-    );
-  }
-}
-
-class _QrCard extends StatelessWidget {
-  final QrModel qr;
-  final int index;
-
-  const _QrCard({required this.qr, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    final qrProvider = context.read<QrProvider>();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => QrDetailScreen(qrId: qr.id)),
-          ),
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // QR Preview
-                Hero(
-                  tag: 'qr_${qr.id}',
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.divider),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: QrImageView(
-                        data: qr.qrUrl,
-                        version: QrVersions.auto,
-                        size: 80,
-                        padding: const EdgeInsets.all(8),
-                      ),
-                    ),
-                  ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              decoration: InputDecoration(
+                hintText: 'Buscar QR...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                filled: true,
+                fillColor: AppTheme.surface,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppTheme.divider),
                 ),
-                const Gap(16),
-                
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              qr.name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Gap(8),
-                          _StatusBadge(isActive: qr.isActive),
-                        ],
-                      ),
-                      const Gap(4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.background,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '/${qr.slug}',
-                          style: TextStyle(
-                            color: AppTheme.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ),
-                      if (qr.targetUrl != null) ...[
-                        const Gap(6),
-                        Row(
-                          children: [
-                            const Icon(Icons.link_rounded, size: 14, color: AppTheme.textSecondary),
-                            const Gap(4),
-                            Expanded(
-                              child: Text(
-                                qr.targetUrl!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppTheme.divider),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.primary),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty 
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+              ),
+            ),
+          ),
+          Expanded(
+            child: filteredList.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.search_off_rounded, size: 48, color: AppTheme.textSecondary),
+                        const Gap(16),
+                        Text(
+                          'No se encontraron resultados',
+                          style: TextStyle(color: AppTheme.textSecondary),
                         ),
                       ],
-                      const Gap(12),
-                      
-                      // Actions
-                      Row(
-                        children: [
-                          _ActionChip(
-                            icon: Icons.share_rounded,
-                            label: 'Compartir',
-                            onTap: () => _shareQr(context, qr),
-                          ),
-                          const Gap(8),
-                          _ActionChip(
-                            icon: qr.isActive ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            label: qr.isActive ? 'Pausar' : 'Activar',
-                            color: qr.isActive ? AppTheme.warning : AppTheme.success,
-                            onTap: () => qrProvider.toggleQrStatus(qr),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
+                    itemCount: filteredList.length,
+                    itemBuilder: (context, index) {
+                      final qr = filteredList[index];
+                      return QrCard(qr: qr, index: index);
+                    },
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(delay: Duration(milliseconds: 100 * index)).slideY(begin: 0.1, end: 0);
-  }
-
-  void _shareQr(BuildContext context, QrModel qr) {
-    Share.share(
-      'Escanea mi QR: ${qr.qrUrl}',
-      subject: qr.name,
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final bool isActive;
-
-  const _StatusBadge({required this.isActive});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive 
-            ? AppTheme.success.withOpacity(0.1) 
-            : AppTheme.textSecondary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isActive ? AppTheme.success : AppTheme.textSecondary,
-            ),
-          ),
-          const Gap(4),
-          Text(
-            isActive ? 'Activo' : 'Pausado',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isActive ? AppTheme.success : AppTheme.textSecondary,
-            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? color;
-
-  const _ActionChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final chipColor = color ?? AppTheme.textSecondary;
-    
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: chipColor.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: chipColor.withOpacity(0.1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14, color: chipColor),
-              const Gap(4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: chipColor,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

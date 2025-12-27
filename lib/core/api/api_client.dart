@@ -84,14 +84,34 @@ class ApiClient {
   Future<Response> createQr(Map<String, dynamic> data) => 
       _dio.post('/api/qr', data: data);
   
+  Future<Response> getQr(String id) => _dio.get('/api/qr/$id');
+
   Future<Response> updateQr(String id, Map<String, dynamic> data) => 
       _dio.patch('/api/qr/$id', data: data);
   
   Future<Response> deleteQr(String id) => 
       _dio.delete('/api/qr/$id');
 
+  Future<Response> toggleQr(String id) => 
+      _dio.post('/api/qr/$id/toggle');
+
+  Future<Response> duplicateQr(String id) => 
+      _dio.post('/api/qr/$id/duplicate');
+
+  Future<Response> getQrRules(String id) => 
+      _dio.get('/api/qr/$id/rules');
+
+  Future<Response> updateQrRules(String id, Map<String, dynamic> data) => 
+      _dio.put('/api/qr/$id/rules', data: data);
+
   Future<Response> getQrAnalytics(String id) => 
       _dio.get('/api/qr/$id/analytics');
+
+  Future<Response> getQrReport(String id) => 
+      _dio.get('/api/qr/$id/report');
+
+  // General Analytics (Markov/Montecarlo)
+  Future<Response> getGeneralAnalytics() => _dio.get('/api/analytics');
 
   // Stats
   Future<Response> getDashboardStats() => _dio.get('/api/stats');
@@ -101,4 +121,43 @@ class ApiClient {
   
   Future<Response> createFolder(Map<String, dynamic> data) => 
       _dio.post('/api/folders', data: data);
+
+  Future<Response> updateFolder(String id, Map<String, dynamic> data) => 
+      _dio.patch('/api/folders/$id', data: data);
+
+  Future<Response> deleteFolder(String id) => 
+      _dio.delete('/api/folders/$id');
+
+  // Billing
+  Future<Response> getBillingStatus() => _dio.get('/api/billing/status');
+  
+  Future<Response> createPaymentIntent(Map<String, dynamic> data) => 
+      _dio.post('/api/billing/create-intent', data: data);
+
+  // Account
+  Future<Response> updateProfile(Map<String, dynamic> data) => 
+      _dio.patch('/api/account/profile', data: data);
+
+  Future<Response> getSubscription() => 
+      _dio.get('/api/account/subscription');
+
+  Future<Response> deleteAccount() => 
+      _dio.delete('/api/account/delete');
+
+  Future<Response> acceptTerms() => 
+      _dio.post('/api/account/accept-terms');
+
+  // Auth Extras (Devices)
+  Future<Response> getDevices() => 
+      _dio.get('/api/mobile/auth/devices');
+
+  Future<Response> revokeDevice(String id) => 
+      _dio.delete('/api/mobile/auth/devices/$id');
+
+  Future<Response> logoutAllDevices() => 
+      _dio.post('/api/mobile/auth/logout-all');
+
+  // Export
+  Future<Response> exportScans() => 
+      _dio.get('/api/export/scans');
 }

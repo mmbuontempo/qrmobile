@@ -7,6 +7,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/qr_provider.dart';
+import '../../folders/providers/folder_provider.dart';
+import '../../../core/utils/time_ago.dart';
 import '../../../core/models/qr_model.dart';
 
 class QrDetailScreen extends StatefulWidget {
@@ -23,8 +25,11 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
   late TextEditingController _nameController;
   late TextEditingController _slugController;
   late TextEditingController _urlController;
+  String? _selectedFolderId;
   bool _isEditing = false;
   bool _isSaving = false;
+
+  bool _isCopied = false;
 
   @override
   void initState() {
@@ -35,6 +40,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadQrData();
+      context.read<FolderProvider>().loadFolders();
     });
   }
 
@@ -44,6 +50,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
       _nameController.text = qr.name;
       _slugController.text = qr.slug;
       _urlController.text = qr.targetUrl ?? '';
+      _selectedFolderId = qr.folderId;
     }
   }
 
@@ -55,9 +62,21 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
     super.dispose();
   }
 
+  Color _getFolderColor(String? colorName) {
+    switch (colorName) {
+      case 'red': return Colors.red;
+      case 'green': return Colors.green;
+      case 'orange': return Colors.orange;
+      case 'purple': return Colors.purple;
+      case 'teal': return Colors.teal;
+      default: return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final qrProvider = context.watch<QrProvider>();
+    final folderProvider = context.watch<FolderProvider>();
     final qr = qrProvider.getQrById(widget.qrId);
 
     if (qr == null) {
@@ -144,12 +163,19 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                   InkWell(
                     onTap: () => _copyToClipboard(qr.qrUrl),
                     borderRadius: BorderRadius.circular(12),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: 200.ms,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.05),
+                        color: _isCopied 
+                            ? AppTheme.success.withOpacity(0.1) 
+                            : AppTheme.primary.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+                        border: Border.all(
+                          color: _isCopied 
+                              ? AppTheme.success.withOpacity(0.5) 
+                              : AppTheme.primary.withOpacity(0.1)
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -157,8 +183,8 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                           Flexible(
                             child: Text(
                               qr.qrUrl,
-                              style: const TextStyle(
-                                color: AppTheme.primary,
+                              style: TextStyle(
+                                color: _isCopied ? AppTheme.success : AppTheme.primary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -167,7 +193,16 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                             ),
                           ),
                           const Gap(12),
-                          const Icon(Icons.copy_rounded, size: 16, color: AppTheme.primary),
+                          AnimatedSwitcher(
+                            duration: 200.ms,
+                            transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                            child: Icon(
+                              _isCopied ? Icons.check_circle_rounded : Icons.copy_rounded,
+                              key: ValueKey(_isCopied),
+                              size: 16, 
+                              color: _isCopied ? AppTheme.success : AppTheme.primary
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -268,6 +303,32 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                           return null;
                         },
                       ),
+                      const Gap(16),
+
+                      DropdownButtonFormField<String>(
+                        value: _selectedFolderId,
+                        decoration: const InputDecoration(
+                          labelText: 'Carpeta',
+                          prefixIcon: Icon(Icons.folder_open_rounded),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Sin carpeta'),
+                          ),
+                          ...folderProvider.folders.map((folder) => DropdownMenuItem(
+                            value: folder.id,
+                            child: Row(
+                              children: [
+                                Icon(Icons.circle, size: 10, color: _getFolderColor(folder.color)),
+                                const Gap(8),
+                                Text(folder.name),
+                              ],
+                            ),
+                          )),
+                        ],
+                        onChanged: (v) => setState(() => _selectedFolderId = v),
+                      ),
                     ],
                   ),
                 ).animate().fadeIn(),
@@ -303,16 +364,28 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                       isLink: true,
                     ),
                     const Divider(height: 32),
+                    if (qr.folderId != null) ...[
+                      _InfoRow(
+                        icon: Icons.folder_outlined,
+                        label: 'Carpeta',
+                        value: folderProvider.folders
+                                .where((f) => f.id == qr.folderId)
+                                .firstOrNull
+                                ?.name ??
+                            'Carpeta no encontrada',
+                      ),
+                      const Divider(height: 32),
+                    ],
                     _InfoRow(
                       icon: Icons.calendar_today_rounded,
                       label: 'Creado',
-                      value: _formatDate(qr.createdAt),
+                      value: TimeAgo.formatFull(qr.createdAt),
                     ),
                     const Divider(height: 32),
                     _InfoRow(
                       icon: Icons.update_rounded,
                       label: 'Actualizado',
-                      value: _formatDate(qr.updatedAt),
+                      value: TimeAgo.formatFull(qr.updatedAt),
                     ),
                     const Divider(height: 32),
                     _InfoRow(
@@ -376,14 +449,14 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
     }
   }
 
-  void _copyToClipboard(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('URL copiada al portapapeles'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  Future<void> _copyToClipboard(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.lightImpact();
+    setState(() => _isCopied = true);
+    
+    Future.delayed(2.seconds, () {
+      if (mounted) setState(() => _isCopied = false);
+    });
   }
 
   void _shareQr(QrModel qr) {
@@ -424,9 +497,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
-  }
+  // Removed _formatDate as we use TimeAgo now
 }
 
 class _InfoRow extends StatelessWidget {

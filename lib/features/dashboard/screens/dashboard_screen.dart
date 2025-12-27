@@ -3,11 +3,20 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/skeleton_loader.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../providers/stats_provider.dart';
 import '../../qr/providers/qr_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../billing/providers/billing_provider.dart';
+import '../../billing/screens/billing_screen.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../widgets/stats_card.dart';
 import '../../qr/screens/qr_list_screen.dart';
+import '../../qr/widgets/create_qr_dialog.dart';
+import '../../settings/screens/profile_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../settings/screens/devices_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -38,10 +47,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     final statsProvider = context.read<StatsProvider>();
     final qrProvider = context.read<QrProvider>();
+    final billingProvider = context.read<BillingProvider>();
     
     await Future.wait([
       statsProvider.loadStats(),
       qrProvider.loadQrList(),
+      billingProvider.loadSubscription(),
     ]);
   }
 
@@ -61,10 +72,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(), // Disable swipe to avoid conflict with gestures
-        children: const [
-          _HomeTab(),
-          QrListScreen(),
-          _SettingsTab(),
+        children: [
+          _HomeTab(onSwitchTab: _onNavTap),
+          const QrListScreen(),
+          const _SettingsTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -109,19 +120,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+  final Function(int) onSwitchTab;
+
+  const _HomeTab({required this.onSwitchTab});
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Buenos días';
+    if (hour < 19) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final statsProvider = context.watch<StatsProvider>();
     final qrProvider = context.watch<QrProvider>();
+    final billingProvider = context.watch<BillingProvider>();
 
     return RefreshIndicator(
       onRefresh: () async {
         await Future.wait([
           statsProvider.loadStats(),
           qrProvider.loadQrList(),
+          billingProvider.loadSubscription(),
         ]);
       },
       color: AppTheme.primary,
@@ -142,18 +164,10 @@ class _HomeTab extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
                   ),
-                  child: CircleAvatar(
+                  child: UserAvatar(
+                    name: authProvider.user?.name,
+                    imageUrl: authProvider.user?.avatarUrl,
                     radius: 20,
-                    backgroundColor: AppTheme.primary.withOpacity(0.1),
-                    backgroundImage: authProvider.user?.avatarUrl != null
-                        ? NetworkImage(authProvider.user!.avatarUrl!)
-                        : null,
-                    child: authProvider.user?.avatarUrl == null
-                        ? Text(
-                            authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
-                            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
-                          )
-                        : null,
                   ),
                 ),
               ),
@@ -168,7 +182,7 @@ class _HomeTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '¡Hola, ${authProvider.user?.name?.split(' ').first ?? 'Usuario'}! 👋',
+                      '${_getGreeting()}, ${authProvider.user?.name?.split(' ').first ?? 'Usuario'}! 👋',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimary,
@@ -186,11 +200,98 @@ class _HomeTab extends StatelessWidget {
                 
                 const Gap(24),
 
+                // Plan Usage Card
+                if (billingProvider.subscription != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              billingProvider.subscription!.planName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${billingProvider.subscription!.qrUsed}/${billingProvider.subscription!.qrLimit} QRs',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Gap(12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: billingProvider.subscription!.qrLimit > 0 
+                                ? billingProvider.subscription!.qrUsed / billingProvider.subscription!.qrLimit
+                                : 0,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: const AlwaysStoppedAnimation(Colors.white),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const Gap(8),
+                        Text(
+                          billingProvider.canCreateQr 
+                              ? 'Puedes crear ${billingProvider.qrRemaining} QRs más'
+                              : 'Has alcanzado el límite de tu plan',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+                  const Gap(24),
+                ],
+
                 // Stats Grid
                 if (statsProvider.isLoading)
-                  const SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1.4,
+                    children: List.generate(4, (index) => const SkeletonLoader(
+                      width: double.infinity,
+                      height: 100,
+                      borderRadius: 20,
+                    )),
                   )
                 else
                   GridView.count(
@@ -254,8 +355,32 @@ class _HomeTab extends StatelessWidget {
                         color: AppTheme.primary,
                         delay: 600,
                         onTap: () {
-                          // Navigate to QR tab? Or open dialog
-                          // For now, let's suggest switching to tab 1
+                          if (billingProvider.canCreateQr) {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const CreateQrDialog(),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Límite de plan alcanzado. Actualiza tu plan para crear más QRs.'),
+                                backgroundColor: AppTheme.warning,
+                                action: SnackBarAction(
+                                  label: 'VER PLANES',
+                                  textColor: Colors.white,
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => BillingScreen()),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          }
                         },
                       ),
                     ),
@@ -287,7 +412,7 @@ class _HomeTab extends StatelessWidget {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {}, // Navigate to tab 1
+                        onPressed: () => onSwitchTab(1), // Switch to QRs tab
                         style: TextButton.styleFrom(
                           foregroundColor: AppTheme.primary,
                         ),
@@ -435,6 +560,7 @@ class _SettingsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final billingProvider = context.watch<BillingProvider>();
     
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -468,18 +594,11 @@ class _SettingsTab extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
                   ),
-                  child: CircleAvatar(
+                  child: UserAvatar(
+                    name: authProvider.user?.name,
+                    imageUrl: authProvider.user?.avatarUrl,
                     radius: 30,
-                    backgroundColor: AppTheme.primary.withOpacity(0.1),
-                    backgroundImage: authProvider.user?.avatarUrl != null
-                        ? NetworkImage(authProvider.user!.avatarUrl!)
-                        : null,
-                    child: authProvider.user?.avatarUrl == null
-                        ? Text(
-                            authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary),
-                          )
-                        : null,
+                    fontSize: 24,
                   ),
                 ),
                 const Gap(16),
@@ -504,15 +623,17 @@ class _SettingsTab extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
+                          color: billingProvider.isPaid 
+                              ? AppTheme.success.withOpacity(0.1)
+                              : AppTheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Plan Gratuito', // TODO: Fetch plan
+                          billingProvider.subscription?.planName ?? 'Cargando...',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.primary,
+                            color: billingProvider.isPaid ? AppTheme.success : AppTheme.primary,
                           ),
                         ),
                       ),
@@ -533,17 +654,68 @@ class _SettingsTab extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.person_outline_rounded,
                 title: 'Mi Cuenta',
-                onTap: () {},
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ProfileScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.credit_card_outlined,
+                title: 'Suscripción y Pagos',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => BillingScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.devices_other_rounded,
+                title: 'Dispositivos',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => DevicesScreen()),
+                ),
+              ),
+              _SettingsTile(
+                icon: Icons.download_rounded,
+                title: 'Exportar Datos (CSV)',
+                onTap: () async {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Generando reporte...')),
+                  );
+                  
+                  final url = await context.read<SettingsProvider>().exportScans();
+                  
+                  if (context.mounted) {
+                    if (url != null) {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No se pudo generar el reporte'),
+                          backgroundColor: AppTheme.error,
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
                 title: 'Notificaciones',
-                onTap: () {},
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Próximamente')),
+                  );
+                },
               ),
               _SettingsTile(
                 icon: Icons.palette_outlined,
                 title: 'Apariencia',
-                onTap: () {},
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Próximamente')),
+                  );
+                },
               ),
             ],
           ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),

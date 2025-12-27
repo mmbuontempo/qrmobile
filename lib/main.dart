@@ -4,6 +4,9 @@ import 'app/app.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/qr/providers/qr_provider.dart';
 import 'features/dashboard/providers/stats_provider.dart';
+import 'features/folders/providers/folder_provider.dart';
+import 'features/billing/providers/billing_provider.dart';
+import 'features/settings/providers/settings_provider.dart';
 import 'core/api/api_client.dart';
 
 void main() {
@@ -14,6 +17,9 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => QrProvider()),
         ChangeNotifierProvider(create: (_) => StatsProvider()),
+        ChangeNotifierProvider(create: (_) => FolderProvider()),
+        ChangeNotifierProvider(create: (_) => BillingProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: const PromusLinkApp(),
     ),

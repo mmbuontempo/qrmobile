@@ -123,6 +123,30 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ===========================================================================
+  // DISPOSITIVOS (Audit 2.1)
+  // ===========================================================================
+
+  Future<List<Map<String, dynamic>>> getDevices() async {
+    return await _authService.getDevices();
+  }
+
+  Future<bool> revokeDevice(String deviceId) async {
+    final success = await _authService.revokeDevice(deviceId);
+    if (success) notifyListeners(); // Por si revocamos el actual (aunque el backend debería rechazar siguiente request)
+    return success;
+  }
+
+  Future<bool> logoutAllDevices() async {
+    final success = await _authService.logoutAllDevices();
+    if (success) {
+      _user = null;
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+    }
+    return success;
+  }
+
   /// Limpiar error
   void clearError() {
     _errorMessage = null;

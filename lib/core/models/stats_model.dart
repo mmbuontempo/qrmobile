@@ -6,6 +6,12 @@ class StatsModel {
   final int scansThisWeek;
   final int scansThisMonth;
   final List<DailyScan> dailyScans;
+  
+  // Plan Info (agregado según auditoría)
+  final String? planName;
+  final int? qrLimit;
+  final int? qrUsed;
+  final int? qrRemaining;
 
   StatsModel({
     required this.totalQrs,
@@ -15,6 +21,10 @@ class StatsModel {
     required this.scansThisWeek,
     required this.scansThisMonth,
     required this.dailyScans,
+    this.planName,
+    this.qrLimit,
+    this.qrUsed,
+    this.qrRemaining,
   });
 
   factory StatsModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +40,10 @@ class StatsModel {
       dailyScans: dailyScansData
           .map((e) => DailyScan.fromJson(e as Map<String, dynamic>))
           .toList(),
+      planName: json['planName'],
+      qrLimit: json['qrLimit'],
+      qrUsed: json['qrUsed'],
+      qrRemaining: json['qrRemaining'],
     );
   }
 
@@ -41,6 +55,10 @@ class StatsModel {
     scansThisWeek: 0,
     scansThisMonth: 0,
     dailyScans: [],
+    planName: 'Starter',
+    qrLimit: 1,
+    qrUsed: 0,
+    qrRemaining: 1,
   );
 }
 

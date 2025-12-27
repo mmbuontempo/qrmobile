@@ -33,6 +33,18 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Node / tooling
+node_modules/
+
+# Android sensitive / local
+/android/local.properties
+/android/key.properties
+/android/fastlane/google-play-json-key.json
+
+# iOS / macOS Pods (generated)
+/ios/Pods/
+/macos/Pods/
+
 # Symbolication related
 app.*.symbols
 

@@ -1,0 +1,2 @@
+json_key_file("android/fastlane/google-play-json-key.json")
+package_name("com.promuslink.app")

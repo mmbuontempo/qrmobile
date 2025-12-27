@@ -67,3 +67,32 @@ class StatsCard extends StatelessWidget {
       .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad);
   }
 }
+
+class _AnimatedCount extends StatelessWidget {
+  final String value;
+  final TextStyle? style;
+
+  const _AnimatedCount({required this.value, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    // Try to parse integer to animate
+    final numericValue = int.tryParse(value);
+    
+    if (numericValue == null) {
+      return Text(value, style: style);
+    }
+
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: numericValue),
+      duration: 1500.ms,
+      curve: Curves.easeOutExpo,
+      builder: (context, value, child) {
+        return Text(
+          value.toString(),
+          style: style,
+        );
+      },
+    );
+  }
+}
