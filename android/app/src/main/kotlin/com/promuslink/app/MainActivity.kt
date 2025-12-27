@@ -1,4 +1,4 @@
-package com.example.hola_flutter
+package com.promuslink.app
 
 import io.flutter.embedding.android.FlutterActivity
 

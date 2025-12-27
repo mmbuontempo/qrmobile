@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gap/gap.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/qr_provider.dart';
 
 class CreateQrDialog extends StatefulWidget {
@@ -34,120 +37,146 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.qr_code_2, size: 28),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Crear Nuevo QR',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        top: 24,
+        left: 24,
+        right: 24,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.qr_code_2_rounded, size: 24, color: AppTheme.primary),
+                ),
+                const Gap(16),
+                Text(
+                  'Crear Nuevo QR',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(24),
+
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nombre del QR',
+                hintText: 'Ej: Menú Restaurante',
+                prefixIcon: Icon(Icons.label_outline_rounded),
+              ),
+              textCapitalization: TextCapitalization.words,
+              onChanged: (value) {
+                if (_slugController.text.isEmpty || 
+                    _slugController.text == _generateSlug(_nameController.text.substring(0, _nameController.text.length - 1))) {
+                  _slugController.text = _generateSlug(value);
+                }
+              },
+              validator: (v) => v?.isEmpty == true ? 'Ingresa un nombre' : null,
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0),
+            
+            const Gap(16),
+
+            TextFormField(
+              controller: _slugController,
+              decoration: const InputDecoration(
+                labelText: 'Slug (URL corta)',
+                hintText: 'Ej: menu-restaurante',
+                prefixIcon: Icon(Icons.link_rounded),
+                prefixText: '/',
+              ),
+              validator: (v) {
+                if (v?.isEmpty == true) return 'Ingresa un slug';
+                if (!RegExp(r'^[a-z0-9-]+$').hasMatch(v!)) {
+                  return 'Solo letras minúsculas, números y guiones';
+                }
+                return null;
+              },
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+            
+            const Gap(16),
+
+            TextFormField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                labelText: 'URL Destino',
+                hintText: 'https://tu-sitio.com/pagina',
+                prefixIcon: Icon(Icons.open_in_new_rounded),
+              ),
+              keyboardType: TextInputType.url,
+              validator: (v) {
+                if (v?.isEmpty == true) return 'Ingresa una URL';
+                final uri = Uri.tryParse(v!);
+                if (uri == null || !uri.hasScheme) {
+                  return 'Ingresa una URL válida (con https://)';
+                }
+                return null;
+              },
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+            
+            const Gap(32),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: AppTheme.divider),
+                      foregroundColor: AppTheme.textSecondary,
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const Gap(16),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    onPressed: _isLoading ? null : _createQr,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                    ),
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add_rounded),
+                    label: Text(
+                      _isLoading ? 'Creando...' : 'Crear QR',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del QR',
-                  hintText: 'Ej: Menú Restaurante',
-                  prefixIcon: Icon(Icons.label),
-                  border: OutlineInputBorder(),
                 ),
-                textCapitalization: TextCapitalization.words,
-                onChanged: (value) {
-                  if (_slugController.text.isEmpty || 
-                      _slugController.text == _generateSlug(_nameController.text.substring(0, _nameController.text.length - 1))) {
-                    _slugController.text = _generateSlug(value);
-                  }
-                },
-                validator: (v) => v?.isEmpty == true ? 'Ingresa un nombre' : null,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _slugController,
-                decoration: const InputDecoration(
-                  labelText: 'Slug (URL corta)',
-                  hintText: 'Ej: menu-restaurante',
-                  prefixIcon: Icon(Icons.link),
-                  prefixText: '/',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) {
-                  if (v?.isEmpty == true) return 'Ingresa un slug';
-                  if (!RegExp(r'^[a-z0-9-]+$').hasMatch(v!)) {
-                    return 'Solo letras minúsculas, números y guiones';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL Destino',
-                  hintText: 'https://tu-sitio.com/pagina',
-                  prefixIcon: Icon(Icons.open_in_new),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.url,
-                validator: (v) {
-                  if (v?.isEmpty == true) return 'Ingresa una URL';
-                  final uri = Uri.tryParse(v!);
-                  if (uri == null || !uri.hasScheme) {
-                    return 'Ingresa una URL válida (con https://)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: FilledButton.icon(
-                      onPressed: _isLoading ? null : _createQr,
-                      icon: _isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.add),
-                      label: Text(_isLoading ? 'Creando...' : 'Crear QR'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+          ],
         ),
       ),
     );
@@ -173,14 +202,16 @@ class _CreateQrDialogState extends State<CreateQrDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('QR creado correctamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(qrProvider.errorMessage ?? 'Error al crear QR'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         qrProvider.clearError();

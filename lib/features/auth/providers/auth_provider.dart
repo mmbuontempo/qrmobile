@@ -82,6 +82,35 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Login con código de autorización (Deep Link)
+  Future<bool> loginWithCode(String code) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final user = await _authService.exchangeAuthCode(code);
+      
+      if (user != null) {
+        _user = user;
+        _status = AuthStatus.authenticated;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = 'Código inválido o expirado';
+        _status = AuthStatus.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Code Login error: $e');
+      _errorMessage = 'Error al iniciar sesión con código';
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Logout completo
   Future<void> logout() async {
     _status = AuthStatus.loading;

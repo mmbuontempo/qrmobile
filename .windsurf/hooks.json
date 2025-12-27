@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "post_write_code": [
+      {
+        "command": "node .windsurf/scripts/format-file.cjs",
+        "show_output": false
+      }
+    ]
+  }
+}

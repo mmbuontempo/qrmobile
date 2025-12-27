@@ -1,14 +1,14 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/app_constants.dart';
 
 /// Servicio de Google Sign-In nativo
 class GoogleAuthService {
-  // Web Client ID de Google Cloud Console (mismo que usa el backend)
-  static const _webClientId = '995720787488-1jf9j6t93c7tr4nj1nnl4ugshlbsqgp6.apps.googleusercontent.com';
-  
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId: _webClientId,
+    // IMPORTANTE: Aquí va el WEB Client ID, no el Android Client ID.
+    // Esto permite obtener el idToken para el backend.
+    serverClientId: AppConstants.googleWebClientId,
   );
 
   /// Iniciar sesión con Google

@@ -48,6 +48,36 @@ class AuthService {
     };
   }
 
+  /// Intercambiar código de autorización por tokens
+  Future<UserModel?> exchangeAuthCode(String code) async {
+    // 1. Obtener info del dispositivo
+    final deviceInfo = await _getDeviceInfo();
+
+    try {
+      // 2. Enviar al backend
+      final response = await _dio.post(AppConstants.mobileAuthToken, data: {
+        'code': code,
+        ...deviceInfo,
+      });
+
+      final data = response.data;
+
+      // 3. Guardar tokens
+      await SecureStorageService.setAccessToken(data['accessToken']);
+      await SecureStorageService.setRefreshToken(data['refreshToken']);
+      
+      // 4. Guardar datos del usuario
+      final user = UserModel.fromJson(data['user']);
+      await SecureStorageService.setUserData(jsonEncode(data['user']));
+
+      debugPrint('[Auth] Login con código exitoso: ${user.email}');
+      return user;
+    } catch (e) {
+      debugPrint('[Auth] Error intercambiando código: $e');
+      return null;
+    }
+  }
+
   /// LOGIN CON GOOGLE - Método principal
   /// Retorna el usuario autenticado o null si canceló
   Future<UserModel?> signInWithGoogle() async {
@@ -62,7 +92,7 @@ class AuthService {
     final deviceInfo = await _getDeviceInfo();
 
     // 3. Enviar al backend
-    final response = await _dio.post('/api/mobile/auth/google', data: {
+    final response = await _dio.post(AppConstants.mobileAuthGoogle, data: {
       'idToken': idToken,
       ...deviceInfo,
     });
@@ -89,7 +119,7 @@ class AuthService {
     if (refreshToken == null) return false;
     
     try {
-      final response = await _dio.post('/api/mobile/auth/refresh', data: {
+      final response = await _dio.post(AppConstants.mobileAuthRefresh, data: {
         'refreshToken': refreshToken,
         'deviceId': deviceId,
       });
@@ -115,7 +145,7 @@ class AuthService {
 
     try {
       final response = await _dio.get(
-        '/api/mobile/auth/me',
+        AppConstants.mobileAuthMe,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return UserModel.fromJson(response.data['user']);
@@ -143,7 +173,7 @@ class AuthService {
     // Revocar token en el servidor
     if (refreshToken != null) {
       try {
-        await _dio.post('/api/mobile/auth/logout', data: {
+        await _dio.post(AppConstants.mobileAuthLogout, data: {
           'refreshToken': refreshToken,
         });
       } catch (_) {}

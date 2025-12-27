@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gap/gap.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/qr_provider.dart';
 import '../../../core/models/qr_model.dart';
 
@@ -56,23 +59,27 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
   Widget build(BuildContext context) {
     final qrProvider = context.watch<QrProvider>();
     final qr = qrProvider.getQrById(widget.qrId);
-    final colorScheme = Theme.of(context).colorScheme;
 
     if (qr == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('QR no encontrado')),
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(title: const Text('QR no encontrado'), backgroundColor: AppTheme.background),
         body: const Center(child: Text('El QR no existe')),
       );
     }
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar QR' : qr.name),
+        title: Text(_isEditing ? 'Editar QR' : 'Detalles del QR'),
+        backgroundColor: AppTheme.background,
+        centerTitle: false,
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_rounded),
               onPressed: () => setState(() => _isEditing = true),
+              tooltip: 'Editar',
             )
           else
             TextButton(
@@ -91,221 +98,250 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Guardar'),
+                  : const Text('Guardar', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
+          const Gap(8),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // QR Code Display
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+            // QR Code Display Card
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.divider),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.divider),
                     ),
-                  ],
-                ),
-                child: QrImageView(
-                  data: qr.qrUrl,
-                  version: QrVersions.auto,
-                  size: 200,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // QR URL
-            Center(
-              child: InkWell(
-                onTap: () => _copyToClipboard(qr.qrUrl),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        qr.qrUrl,
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    child: QrImageView(
+                      data: qr.qrUrl,
+                      version: QrVersions.auto,
+                      size: 200,
+                    ),
+                  ).animate().scale(curve: Curves.easeOutBack, duration: 500.ms),
+                  
+                  const Gap(20),
+                  
+                  InkWell(
+                    onTap: () => _copyToClipboard(qr.qrUrl),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(Icons.copy, size: 16, color: colorScheme.primary),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              qr.qrUrl,
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Gap(12),
+                          const Icon(Icons.copy_rounded, size: 16, color: AppTheme.primary),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
+            ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+            
+            const Gap(24),
 
-            // Action Buttons
+            // Main Actions
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _shareQr(qr),
-                    icon: const Icon(Icons.share),
+                    icon: const Icon(Icons.share_rounded),
                     label: const Text('Compartir'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: AppTheme.surface,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const Gap(16),
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => qrProvider.toggleQrStatus(qr),
-                    icon: Icon(qr.isActive ? Icons.pause : Icons.play_arrow),
+                    icon: Icon(qr.isActive ? Icons.pause_rounded : Icons.play_arrow_rounded),
                     label: Text(qr.isActive ? 'Pausar' : 'Activar'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: qr.isActive ? Colors.orange : Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: qr.isActive ? AppTheme.warning : AppTheme.success,
+                      foregroundColor: Colors.white,
                     ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 24),
+            ).animate().fadeIn(delay: 200.ms),
+            
+            const Gap(24),
 
-            // Status Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: qr.isActive ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      qr.isActive ? 'QR Activo' : 'QR Pausado',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'Código: ${qr.shortCode}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Edit Form
             if (_isEditing) ...[
               Form(
                 key: _formKey,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppTheme.divider),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Información del QR',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const Gap(20),
+                      
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre',
+                          hintText: 'Ej: QR Menú Principal',
+                          prefixIcon: Icon(Icons.label_outline_rounded),
+                        ),
+                        validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                      ),
+                      const Gap(16),
+                      
+                      TextFormField(
+                        controller: _slugController,
+                        decoration: const InputDecoration(
+                          labelText: 'Slug (URL amigable)',
+                          hintText: 'Ej: menu-principal',
+                          prefixIcon: Icon(Icons.link_rounded),
+                        ),
+                        validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                      ),
+                      const Gap(16),
+                      
+                      TextFormField(
+                        controller: _urlController,
+                        decoration: const InputDecoration(
+                          labelText: 'URL Destino',
+                          hintText: 'https://ejemplo.com',
+                          prefixIcon: Icon(Icons.open_in_new_rounded),
+                        ),
+                        keyboardType: TextInputType.url,
+                        validator: (v) {
+                          if (v?.isEmpty == true) return 'Requerido';
+                          if (!Uri.tryParse(v!)!.hasScheme) return 'URL inválida';
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(),
+              )
+            ] else ...[
+              // Info Display
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppTheme.divider),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Información del QR',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    _InfoRow(
+                      icon: Icons.label_outline_rounded,
+                      label: 'Nombre',
+                      value: qr.name,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
-                        hintText: 'Ej: QR Menú Principal',
-                        prefixIcon: Icon(Icons.label),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                    const Divider(height: 32),
+                    _InfoRow(
+                      icon: Icons.link_rounded,
+                      label: 'Slug',
+                      value: '/${qr.slug}',
+                      isMonospace: true,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _slugController,
-                      decoration: const InputDecoration(
-                        labelText: 'Slug',
-                        hintText: 'Ej: menu-principal',
-                        prefixIcon: Icon(Icons.link),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => v?.isEmpty == true ? 'Requerido' : null,
+                    const Divider(height: 32),
+                    _InfoRow(
+                      icon: Icons.open_in_new_rounded,
+                      label: 'URL Destino',
+                      value: qr.targetUrl ?? 'No configurado',
+                      isLink: true,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _urlController,
-                      decoration: const InputDecoration(
-                        labelText: 'URL Destino',
-                        hintText: 'https://ejemplo.com',
-                        prefixIcon: Icon(Icons.open_in_new),
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.url,
-                      validator: (v) {
-                        if (v?.isEmpty == true) return 'Requerido';
-                        if (!Uri.tryParse(v!)!.hasScheme) return 'URL inválida';
-                        return null;
-                      },
+                    const Divider(height: 32),
+                    _InfoRow(
+                      icon: Icons.calendar_today_rounded,
+                      label: 'Creado',
+                      value: _formatDate(qr.createdAt),
+                    ),
+                    const Divider(height: 32),
+                    _InfoRow(
+                      icon: Icons.update_rounded,
+                      label: 'Actualizado',
+                      value: _formatDate(qr.updatedAt),
+                    ),
+                    const Divider(height: 32),
+                    _InfoRow(
+                      icon: Icons.qr_code_scanner_rounded,
+                      label: 'Estado',
+                      value: qr.isActive ? 'Activo' : 'Pausado',
+                      valueColor: qr.isActive ? AppTheme.success : AppTheme.textSecondary,
                     ),
                   ],
                 ),
-              ),
-            ] else ...[
-              // Info Display
-              _InfoTile(
-                icon: Icons.label,
-                label: 'Nombre',
-                value: qr.name,
-              ),
-              _InfoTile(
-                icon: Icons.link,
-                label: 'Slug',
-                value: '/${qr.slug}',
-              ),
-              _InfoTile(
-                icon: Icons.open_in_new,
-                label: 'URL Destino',
-                value: qr.targetUrl ?? 'No configurado',
-              ),
-              _InfoTile(
-                icon: Icons.calendar_today,
-                label: 'Creado',
-                value: _formatDate(qr.createdAt),
-              ),
-              _InfoTile(
-                icon: Icons.update,
-                label: 'Actualizado',
-                value: _formatDate(qr.updatedAt),
-              ),
+              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
             ],
 
-            const SizedBox(height: 32),
+            const Gap(32),
 
             // Delete Button
-            OutlinedButton.icon(
+            FilledButton.icon(
               onPressed: () => _confirmDelete(qr),
-              icon: const Icon(Icons.delete, color: Colors.red),
-              label: const Text('Eliminar QR', style: TextStyle(color: Colors.red)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red),
+              icon: const Icon(Icons.delete_outline_rounded, size: 20),
+              label: const Text('Eliminar QR'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.error.withOpacity(0.1),
+                foregroundColor: AppTheme.error,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
               ),
-            ),
+            ).animate().fadeIn(delay: 400.ms),
+            
+            const Gap(40),
           ],
         ),
       ),
@@ -343,7 +379,10 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
   void _copyToClipboard(String text) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('URL copiada al portapapeles')),
+      const SnackBar(
+        content: Text('URL copiada al portapapeles'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -367,7 +406,7 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
             child: const Text('Eliminar'),
           ),
         ],
@@ -390,40 +429,62 @@ class _QrDetailScreenState extends State<QrDetailScreen> {
   }
 }
 
-class _InfoTile extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final bool isLink;
+  final bool isMonospace;
+  final Color? valueColor;
 
-  const _InfoTile({
+  const _InfoRow({
     required this.icon,
     required this.label,
     required this.value,
+    this.isLink = false,
+    this.isMonospace = false,
+    this.valueColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.background,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: AppTheme.textSecondary),
+        ),
+        const Gap(16),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
               ),
+              const Gap(4),
               Text(
                 value,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: valueColor ?? (isLink ? AppTheme.primary : AppTheme.textPrimary),
+                  fontWeight: FontWeight.w500,
+                  fontFamily: isMonospace ? 'monospace' : null,
+                  decoration: isLink ? TextDecoration.underline : null,
+                  decorationColor: AppTheme.primary,
+                ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

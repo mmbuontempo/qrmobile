@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gap/gap.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/stats_provider.dart';
 import '../../qr/providers/qr_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -46,19 +49,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _currentIndex = index);
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutQuart,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
     return Scaffold(
+      backgroundColor: AppTheme.background,
       body: PageView(
         controller: _pageController,
-        onPageChanged: (index) => setState(() => _currentIndex = index),
+        physics: const NeverScrollableScrollPhysics(), // Disable swipe to avoid conflict with gestures
         children: const [
           _HomeTab(),
           QrListScreen(),
@@ -67,40 +69,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: AppTheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
               offset: const Offset(0, -5),
             ),
           ],
         ),
         child: NavigationBar(
           elevation: 0,
-          height: 65,
+          height: 70,
           selectedIndex: _currentIndex,
           onDestinationSelected: _onNavTap,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          indicatorColor: colorScheme.primaryContainer,
-          destinations: const [
+          backgroundColor: AppTheme.surface,
+          indicatorColor: AppTheme.primary.withOpacity(0.1),
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home_rounded, color: AppTheme.primary),
               label: 'Inicio',
             ),
             NavigationDestination(
-              icon: Icon(Icons.qr_code_outlined),
-              selectedIcon: Icon(Icons.qr_code_rounded),
+              icon: const Icon(Icons.qr_code_outlined),
+              selectedIcon: const Icon(Icons.qr_code_rounded, color: AppTheme.primary),
               label: 'Mis QRs',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person_rounded),
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: const Icon(Icons.person_rounded, color: AppTheme.primary),
               label: 'Perfil',
             ),
           ],
         ),
-      ),
+      ).animate().slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuad),
     );
   }
 }
@@ -113,7 +116,6 @@ class _HomeTab extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final statsProvider = context.watch<StatsProvider>();
     final qrProvider = context.watch<QrProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -122,128 +124,157 @@ class _HomeTab extends StatelessWidget {
           qrProvider.loadQrList(),
         ]);
       },
+      color: AppTheme.primary,
+      backgroundColor: AppTheme.surface,
       child: CustomScrollView(
         slivers: [
           SliverAppBar.large(
             title: const Text('PromusLink'),
+            centerTitle: false,
+            backgroundColor: AppTheme.background,
+            surfaceTintColor: AppTheme.background,
             actions: [
-              if (authProvider.user?.avatarUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: CircleAvatar(
-                    backgroundImage: NetworkImage(authProvider.user!.avatarUrl!),
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
                   ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
                   child: CircleAvatar(
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Text(
-                      authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
-                      style: TextStyle(color: colorScheme.onPrimaryContainer),
-                    ),
+                    radius: 20,
+                    backgroundColor: AppTheme.primary.withOpacity(0.1),
+                    backgroundImage: authProvider.user?.avatarUrl != null
+                        ? NetworkImage(authProvider.user!.avatarUrl!)
+                        : null,
+                    child: authProvider.user?.avatarUrl == null
+                        ? Text(
+                            authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
+                            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+                          )
+                        : null,
                   ),
                 ),
+              ),
             ],
           ),
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Welcome message
-                Text(
-                  '¡Hola, ${authProvider.user?.name?.split(' ').first ?? 'Usuario'}!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Aquí está el resumen de tus QRs',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '¡Hola, ${authProvider.user?.name?.split(' ').first ?? 'Usuario'}! 👋',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const Gap(4),
+                    Text(
+                      'Aquí está el resumen de tu actividad',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.1, end: 0),
+                
+                const Gap(24),
 
                 // Stats Grid
                 if (statsProvider.isLoading)
-                  const Center(child: CircularProgressIndicator())
+                  const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
                 else
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1.4,
                     children: [
                       StatsCard(
                         title: 'Total QRs',
                         value: qrProvider.qrCount.toString(),
                         icon: Icons.qr_code_2,
-                        color: colorScheme.primary,
+                        color: AppTheme.primary,
+                        delay: 100,
                       ),
                       StatsCard(
                         title: 'QRs Activos',
                         value: qrProvider.activeCount.toString(),
-                        icon: Icons.check_circle,
-                        color: Colors.green,
+                        icon: Icons.check_circle_rounded,
+                        color: AppTheme.success,
+                        delay: 200,
                       ),
                       StatsCard(
                         title: 'Escaneos Hoy',
                         value: statsProvider.stats.scansToday.toString(),
-                        icon: Icons.today,
-                        color: Colors.orange,
+                        icon: Icons.today_rounded,
+                        color: AppTheme.warning,
+                        delay: 300,
                       ),
                       StatsCard(
                         title: 'Total Escaneos',
                         value: statsProvider.stats.totalScans.toString(),
-                        icon: Icons.analytics,
-                        color: Colors.purple,
+                        icon: Icons.insights_rounded,
+                        color: AppTheme.secondary,
+                        delay: 400,
                       ),
                     ],
                   ),
 
-                const SizedBox(height: 24),
+                const Gap(32),
 
                 // Quick Actions
                 Text(
                   'Acciones Rápidas',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
                   ),
-                ),
-                const SizedBox(height: 12),
+                ).animate().fadeIn(delay: 500.ms),
+                
+                const Gap(16),
                 
                 Row(
                   children: [
                     Expanded(
                       child: _QuickActionCard(
-                        icon: Icons.add_circle,
+                        icon: Icons.add_circle_outline_rounded,
                         label: 'Crear QR',
-                        color: colorScheme.primary,
+                        color: AppTheme.primary,
+                        delay: 600,
                         onTap: () {
-                          // Navigate to QR tab
+                          // Navigate to QR tab? Or open dialog
+                          // For now, let's suggest switching to tab 1
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const Gap(16),
                     Expanded(
                       child: _QuickActionCard(
-                        icon: Icons.share,
+                        icon: Icons.share_rounded,
                         label: 'Compartir',
                         color: Colors.teal,
+                        delay: 700,
                         onTap: () {},
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const Gap(32),
 
-                // Recent QRs
+                // Recent QRs Header
                 if (qrProvider.qrList.isNotEmpty) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,42 +283,84 @@ class _HomeTab extends StatelessWidget {
                         'QRs Recientes',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {}, // Navigate to tab 1
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primary,
+                        ),
                         child: const Text('Ver todos'),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...qrProvider.qrList.take(3).map((qr) => Card(
-                    margin: const EdgeInsets.only(bottom: 8),
+                  ).animate().fadeIn(delay: 800.ms),
+                  
+                  const Gap(12),
+                  
+                  // Recent List
+                  ...qrProvider.qrList.take(3).map((qr) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.divider),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
                       leading: Container(
-                        width: 48,
-                        height: 48,
+                        width: 50,
+                        height: 50,
                         decoration: BoxDecoration(
                           color: qr.isActive 
-                              ? colorScheme.primaryContainer 
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
+                              ? AppTheme.primary.withOpacity(0.1) 
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          Icons.qr_code,
+                          Icons.qr_code_2_rounded,
                           color: qr.isActive 
-                              ? colorScheme.onPrimaryContainer 
+                              ? AppTheme.primary 
                               : Colors.grey,
+                          size: 28,
                         ),
                       ),
-                      title: Text(qr.name),
-                      subtitle: Text(qr.slug),
-                      trailing: Icon(
-                        qr.isActive ? Icons.check_circle : Icons.pause_circle,
-                        color: qr.isActive ? Colors.green : Colors.grey,
+                      title: Text(
+                        qr.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '/${qr.slug}',
+                        style: TextStyle(color: AppTheme.primary.withOpacity(0.8)),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: qr.isActive 
+                              ? AppTheme.success.withOpacity(0.1) 
+                              : Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          qr.isActive ? 'Activo' : 'Pausado',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: qr.isActive ? AppTheme.success : Colors.grey,
+                          ),
+                        ),
                       ),
                     ),
-                  )),
+                  ).animate().fadeIn().slideY(begin: 0.1, end: 0)),
+                  
+                  const Gap(80), // Bottom spacing for FAB
                 ],
               ]),
             ),
@@ -303,32 +376,56 @@ class _QuickActionCard extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final int delay;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
+    this.delay = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Material(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.divider),
+          ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 32, color: color),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 28, color: color),
+              ),
+              const Gap(12),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
       ),
-    );
+    ).animate()
+      .fadeIn(delay: Duration(milliseconds: delay))
+      .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
   }
 }
 
@@ -340,41 +437,83 @@ class _SettingsTab extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Ajustes'),
+        backgroundColor: AppTheme.background,
       ),
       body: ListView(
+        padding: const EdgeInsets.all(20),
         children: [
-          // User Info
+          // User Info Card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppTheme.divider),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundImage: authProvider.user?.avatarUrl != null
-                      ? NetworkImage(authProvider.user!.avatarUrl!)
-                      : null,
-                  child: authProvider.user?.avatarUrl == null
-                      ? Text(
-                          authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
-                          style: const TextStyle(fontSize: 24),
-                        )
-                      : null,
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTheme.primary.withOpacity(0.1),
+                    backgroundImage: authProvider.user?.avatarUrl != null
+                        ? NetworkImage(authProvider.user!.avatarUrl!)
+                        : null,
+                    child: authProvider.user?.avatarUrl == null
+                        ? Text(
+                            authProvider.user?.name?.substring(0, 1).toUpperCase() ?? 'U',
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                          )
+                        : null,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const Gap(16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         authProvider.user?.name ?? 'Usuario',
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      const Gap(4),
                       Text(
                         authProvider.user?.email ?? '',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const Gap(8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Plan Gratuito', // TODO: Fetch plan
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -382,38 +521,56 @@ class _SettingsTab extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const Divider(),
+          ).animate().fadeIn().slideY(begin: 0.1, end: 0),
           
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Mi Cuenta'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications),
-            title: const Text('Notificaciones'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.palette),
-            title: const Text('Apariencia'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.help),
-            title: const Text('Ayuda'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
-            onTap: () async {
+          const Gap(32),
+          
+          _SectionTitle('General'),
+          const Gap(12),
+          
+          _SettingsGroup(
+            children: [
+              _SettingsTile(
+                icon: Icons.person_outline_rounded,
+                title: 'Mi Cuenta',
+                onTap: () {},
+              ),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                title: 'Notificaciones',
+                onTap: () {},
+              ),
+              _SettingsTile(
+                icon: Icons.palette_outlined,
+                title: 'Apariencia',
+                onTap: () {},
+              ),
+            ],
+          ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+
+          const Gap(24),
+          _SectionTitle('Soporte'),
+          const Gap(12),
+
+          _SettingsGroup(
+            children: [
+              _SettingsTile(
+                icon: Icons.help_outline_rounded,
+                title: 'Ayuda y Soporte',
+                onTap: () {},
+              ),
+              _SettingsTile(
+                icon: Icons.info_outline_rounded,
+                title: 'Sobre PromusLink',
+                onTap: () {},
+              ),
+            ],
+          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+          
+          const Gap(24),
+          
+          FilledButton(
+            onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -425,6 +582,9 @@ class _SettingsTab extends StatelessWidget {
                       child: const Text('Cancelar'),
                     ),
                     FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.error,
+                      ),
                       onPressed: () => Navigator.pop(context, true),
                       child: const Text('Cerrar Sesión'),
                     ),
@@ -436,20 +596,117 @@ class _SettingsTab extends StatelessWidget {
                 await authProvider.logout();
               }
             },
-          ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.error.withOpacity(0.1),
+              foregroundColor: AppTheme.error,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded, size: 20),
+                Gap(8),
+                Text('Cerrar Sesión', style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ).animate().fadeIn(delay: 300.ms),
           
-          const SizedBox(height: 24),
+          const Gap(40),
           Center(
             child: Text(
-              'PromusLink v1.0.0',
+              'PromusLink Mobile v1.0.0',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
+                color: AppTheme.textSecondary.withOpacity(0.5),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const Gap(20),
         ],
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textSecondary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.divider),
+      ),
+      child: Column(
+        children: children.asMap().entries.map((entry) {
+          final index = entry.key;
+          final isLast = index == children.length - 1;
+          return Column(
+            children: [
+              entry.value,
+              if (!isLast)
+                Divider(height: 1, color: AppTheme.divider.withOpacity(0.5), indent: 56),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.background,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: 20, color: AppTheme.textPrimary),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+      ),
+      trailing: Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textSecondary),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 }

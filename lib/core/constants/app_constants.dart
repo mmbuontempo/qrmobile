@@ -13,6 +13,7 @@ class AppConstants {
   static const String googleWebClientId = '995720787488-1jf9j6t93c7tr4nj1nnl4ugshlbsqgp6.apps.googleusercontent.com';
   
   // Mobile Auth Endpoints
+  static const String mobileAuthToken = '/api/mobile/auth/token';
   static const String mobileAuthGoogle = '/api/mobile/auth/google';
   static const String mobileAuthRefresh = '/api/mobile/auth/refresh';
   static const String mobileAuthMe = '/api/mobile/auth/me';
